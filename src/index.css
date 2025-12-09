@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body .hoverd-blue:hover {
+  background: #013fbd !important;
+}
+
+body .bg-gradient:hover {
+  transition: all ease-in-out 0.5s;
+  background: linear-gradient(90deg, rgba(65, 130, 255, 0.7) 0%, rgba(5, 54, 148, 0.7) 100%);
+}
