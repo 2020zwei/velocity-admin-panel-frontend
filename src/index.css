@@ -1,13 +1,58 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-body .hoverd-blue:hover {
-  background: #013fbd !important;
+
+@layer base {
+  body {
+    @apply font-urbanist bg-[#050509] text-white;
+  }
 }
 
-body .bg-gradient:hover {
-  transition: all ease-in-out 0.5s;
-  background: linear-gradient(90deg, rgba(65, 130, 255, 0.7) 0%, rgba(5, 54, 148, 0.7) 100%);
+
+.btn-ripple {
+  position: absolute;
+  border-radius: 9999px;
+  transform: scale(0);
+  animation: btn-ripple-animation 600ms linear;
+  background-color: rgba(255, 255, 255, 0.4);
+  /* tweak as you like */
+  pointer-events: none;
+}
+
+@keyframes btn-ripple-animation {
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+
+/* Dark thin scrollbar */
+.dark-scrollbar {
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: #3b3b4f #090a12;
+  /* thumb color | track color */
+}
+
+/* Chrome, Edge, Safari */
+.dark-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-track {
+  background: #090a12;
+  /* track */
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: #3b3b4f;
+  /* thumb */
+  border-radius: 999px;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #5a5a7a;
 }
