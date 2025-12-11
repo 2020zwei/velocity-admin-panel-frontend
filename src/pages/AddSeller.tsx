@@ -4,47 +4,96 @@ import Icon from '@/components/Icon'
 import clsx from 'clsx'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
+import { Controller, useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 const keywords = [
     {
         id: 1,
-        lable: "New bussiness Registration"
+        label: "New bussiness Registration"
     },
     {
         id: 2,
-        lable: "Recenet dunding announcemnet"
+        label: "Recenet dunding announcemnet"
     },
     {
         id: 3,
-        lable: "Hiring for sales role"
+        label: "Hiring for sales role"
     },
     {
         id: 4,
-        lable: "Office relocation/ New HQ"
+        label: "Office relocation/ New HQ"
     },
     {
         id: 5,
-        lable: "Website traffic spike"
+        label: "Website traffic spike"
     },
     {
         id: 6,
-        lable: "New location opening"
+        label: "New location opening"
     },
     {
         id: 7,
-        lable: "Contract renewal window"
+        label: "Contract renewal window"
     },
     {
         id: 8,
-        lable: "RFP / bid activity"
+        label: "RFP / bid activity"
     },
 ]
 
+// Zod schema
+const sellerSchema = z.object({
+    salesAgentName: z
+        .string()
+        .min(1, "Sales Agent Name is required"),
+    email: z
+        .string()
+        .min(1, "Email is required")
+        .email("Enter a valid email"),
+    dealerCode: z
+        .string()
+        .min(1, "Dealer Code is required"),
+    territoryState: z
+        .string()
+        .min(1, "Territory - State is required"),
+    zipCode: z
+        .string()
+        .min(1, "Zip Code is required"),
+    keywords: z
+        .array(z.string())
+        .min(1, "Select at least one keyword"),
+    approvers: z
+        .array(z.string())
+        .min(1, "Select at least one approver"),
+})
+
+type SellerFormValues = z.infer<typeof sellerSchema>
+
 const AddSeller = () => {
     const [filterdKeywords, setFilterdKeywords] = useState(keywords ?? [])
-    const [selectedTags, setSelectedTags] = useState<string[] | string>([]);
+    const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const navigate = useNavigate()
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        control,
+        formState: { errors },
+    } = useForm<SellerFormValues>({
+        resolver: zodResolver(sellerSchema),
+        defaultValues: {
+            salesAgentName: "",
+            email: "",
+            dealerCode: "",
+            territoryState: "",
+            zipCode: "",
+            keywords: [],
+            approvers: [],
+        },
+    })
 
     const handleKeySearch = (e: any) => {
         const val = e.target.value.toLowerCase().trim();
@@ -55,12 +104,33 @@ const AddSeller = () => {
         }
 
         const searched = keywords.filter((item) =>
-            item.lable?.toLowerCase().includes(val)
+            item.label?.toLowerCase().includes(val)
         );
 
         setFilterdKeywords(searched);
     };
 
+
+    const onSelect = (item: any) => {
+        const found = selectedKeys.includes(item.label)
+        if (found) {
+            const filtered = selectedKeys.filter((label: string) => label !== item.label)
+            setSelectedKeys(filtered)
+            // sync with react-hook-form
+            setValue("keywords", filtered, { shouldValidate: true })
+        }
+        else {
+            const updated = [...selectedKeys, item.label]
+            setSelectedKeys((prev: string[]) => [...prev, item.label])
+            // sync with react-hook-form
+            setValue("keywords", updated, { shouldValidate: true })
+        }
+    }
+
+    const onSubmit = (data: SellerFormValues) => {
+        console.log("Form submitted:", data)
+        // you can do whatever you want here (API call, etc.)
+    }
 
     return (
         <>
@@ -88,8 +158,8 @@ const AddSeller = () => {
             <div className=' grid lg-xl:grid-cols-2 gap-6 mt-[50px]'>
                 <div>
 
-                    <form action="">
-                        <div className='border border-[#212129] rounded-2xl px-8 py-4 bg-dark-gradient flex flex-col gap-5'>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <div className='border border-[#212129] rounded-2xl px-8 py-8 bg-dark-gradient flex flex-col gap-5'>
                             <div>
                                 <div className='font-semibold text-2xl text-white'>Enter seller details manually</div>
                                 <p className='text-base text-[#FEFFFFCC]'>Add each seller one by one, save them to your intake list, then submit when you're done.</p>
@@ -100,14 +170,34 @@ const AddSeller = () => {
                                         Sales AgentName
                                         <span className='text-[#EE2B93] ps-1'>*</span>
                                     </label>
-                                    <input type="text" placeholder='eg. Alex Martinez' className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]' />
+                                    <input
+                                        type="text"
+                                        placeholder='eg. Alex Martinez'
+                                        className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
+                                        {...register("salesAgentName")}
+                                    />
+                                    {errors.salesAgentName && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errors.salesAgentName.message}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className='flex flex-col gap-2'>
                                     <label htmlFor="" className=' font-medium text-base'>
                                         Email
                                         <span className='text-[#EE2B93] ps-1'>*</span>
                                     </label>
-                                    <input type="email" placeholder='e.g. alex@salespartner.com' className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]' />
+                                    <input
+                                        type="email"
+                                        placeholder='e.g. alex@salespartner.com'
+                                        className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
+                                        {...register("email")}
+                                    />
+                                    {errors.email && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errors.email.message}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className='flex items-center justify-between gap-3'>
                                     <div className='flex flex-col gap-2 flex-1'>
@@ -115,25 +205,45 @@ const AddSeller = () => {
                                             Dealer Code
                                             <span className='text-[#EE2B93] ps-1'>*</span>
                                         </label>
-                                        <input type="text" placeholder='e.g. DLR-2302' className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]' />
+                                        <input
+                                            type="text"
+                                            placeholder='e.g. DLR-2302'
+                                            className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
+                                            {...register("dealerCode")}
+                                        />
+                                        {errors.dealerCode && (
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {errors.dealerCode.message}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className='flex flex-col gap-2 flex-1'>
                                         <label htmlFor="" className=' font-medium text-base'>
                                             Territory- State
                                             <span className='text-[#EE2B93] ps-1'>*</span>
                                         </label>
-                                        <Dropdown
-                                            options={["Design", "Development", "Marketing", "Sales"]}
-                                            value={selectedTags}
-                                            onSelect={(val) => {
-                                                setSelectedTags(val as string[]);
-                                                console.log("Selected tags:", val);
-                                            }}
-                                            classNames={{
-                                                trigger: "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
-                                                selectedOption: "bg-blue-gradient"
-                                            }}
+                                        <Controller
+                                            name="territoryState"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <Dropdown
+                                                    options={["pakistan", "india", "amerca", "UAE"]}
+                                                    value={field.value}
+                                                    onSelect={(val) => field.onChange(val as string)}
+                                                    placeholder="Select territory"
+                                                    classNames={{
+                                                        trigger:
+                                                            "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
+                                                        selectedOption: "bg-blue-gradient",
+                                                    }}
+                                                />
+                                            )}
                                         />
+                                        {errors.territoryState && (
+                                            <p className="text-xs text-red-500 mt-1">
+                                                {errors.territoryState.message}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className='flex flex-col gap-2'>
@@ -141,7 +251,17 @@ const AddSeller = () => {
                                         Zip Code
                                         <span className='text-[#EE2B93] ps-1'>*</span>
                                     </label>
-                                    <input type="text" placeholder='Enter comma-separated ZIP codes....' className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]' />
+                                    <input
+                                        type="text"
+                                        placeholder='Enter comma-separated ZIP codes....'
+                                        className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
+                                        {...register("zipCode")}
+                                    />
+                                    {errors.zipCode && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errors.zipCode.message}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className='flex flex-col gap-5'>
@@ -149,7 +269,7 @@ const AddSeller = () => {
                                     <div>
                                         <label className=' font-medium text-base'>
                                             Keywords
-                                            <span>*</span>
+                                            <span className='text-[#EE2B93] ps-1'>*</span>
                                         </label>
                                         <p>Select the primary buyer signals VelocityIQ should map to this seller.</p>
                                     </div>
@@ -161,12 +281,29 @@ const AddSeller = () => {
                                             placeholder="Search Keyword..."
                                             className={clsx("bg-transparent outline-none flex-1 text-white md:block hidden")}
                                         />
+
                                     </div>
+                                    {errors.keywords && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {errors.keywords.message}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     {filterdKeywords.length ? filterdKeywords.map((item) => (
-                                        <button type='button' key={item.id} className={clsx('my-2 mx-1 rounded-full px-3 py-1 border border-[#EE2B93] text-[#FFFFFF80] hover:bg-[#EE2B934D] hover:text-white hover:border-[#EE2B934D] duration-300')}>{item.lable}</button>
+                                        <button
+                                            onClick={() => onSelect(item)}
+                                            type='button'
+                                            key={item.id}
+                                            className={clsx(
+                                                'my-2 mx-1 rounded-full px-3 py-1 border border-[#EE2B93] text-[#FFFFFF80] hover:bg-[#EE2B934D] hover:text-white hover:border-[#EE2B934D] duration-300',
+                                                selectedKeys.includes(item.label) ? "bg-[#EE2B934D] text-white" : ""
+                                            )}
+                                        >
+                                            {item.label}
+                                        </button>
                                     )) : <div className='text-center font-semibold'>Keywords not found</div>}
+
                                 </div>
                             </div>
 
@@ -176,25 +313,33 @@ const AddSeller = () => {
                                     Add Approvers
                                 </label>
 
-                                <Dropdown
-                                    multiple
-                                    options={["Design", "Development", "Marketing", "Sales"]}
-                                    value={selectedTags}
-                                    onSelect={(val) => {
-                                        setSelectedTags(val as string[]);
-                                        console.log("Selected tags:", val);
-                                    }}
-                                    classNames={{
-                                        trigger: "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
-                                        selectedOption: "bg-blue-gradient"
-                                    }}
+                                <Controller
+                                    name="approvers"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Dropdown
+                                            multiple
+                                            options={["Design", "Development", "Marketing", "Sales"]}
+                                            value={field.value}
+                                            onSelect={(val) => field.onChange(val as string[])}
+                                            classNames={{
+                                                trigger: "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
+                                                selectedOption: "bg-blue-gradient"
+                                            }}
+                                        />
+                                    )}
                                 />
+                                {errors.approvers && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {errors.approvers.message}
+                                    </p>
+                                )}
                             </div>
 
 
                         </div>
                         <div className='flex items-center mt-10 gap-10'>
-                            <Button className='!rounded-full'>
+                            <Button className='!rounded-full' type="submit">
                                 Submit intake
                             </Button>
                             <div className='flex items-center whitespace-nowrap text-[#FEFFFFCC] text-base'>
@@ -206,7 +351,7 @@ const AddSeller = () => {
                 </div>
 
 
-                <div className='text-[#FEFFFFCC] text-base border border-[#212129] rounded-2xl px-8 py-4 bg-dark-gradient flex flex-col gap-5 h-fit'>
+                <div className='text-[#FEFFFFCC] text-base border border-[#212129] rounded-2xl px-8 py-8 bg-dark-gradient flex flex-col gap-5 h-fit'>
 
                     <div>
                         <div className='font-semibold text-2xl text-white'>What happens next?</div>

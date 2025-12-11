@@ -15,7 +15,7 @@ const Layout = () => {
   }
 
   useEffect(() => {
-    if (width < 1290) {
+    if (width < 1290 && isSidebarOpen) {
       setIsSidebarOpen(false);
     }
   }, [navigate]);

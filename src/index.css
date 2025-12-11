@@ -56,3 +56,34 @@
 .dark-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #5a5a7a;
 }
+
+
+/* Tailwind projects: put this AFTER @tailwind base; or inside @layer base */
+@layer base {
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    /* match your dark input bg */
+    -webkit-box-shadow: 0 0 0 1000px #09090E inset;
+    box-shadow: 0 0 0 1000px #09090E inset;
+    -webkit-text-fill-color: #ffffff;
+    /* text color in dark mode */
+    caret-color: #ffffff;
+  }
+
+  /* Firefox */
+  input:-moz-autofill,
+  textarea:-moz-autofill,
+  select:-moz-autofill {
+    box-shadow: 0 0 0 1000px #09090E inset;
+    -moz-text-fill-color: #ffffff;
+    caret-color: #ffffff;
+  }
+}

@@ -1,8 +1,9 @@
 import { Button } from "@/components/Button";
 import DeleteModal from "@/components/DeleteModal";
+import Pagination from "@/components/Pagination";
 import TableActions from "@/components/TableActions";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const sellers = [
   { id: 1, name: "Acme Corp", email: "John Reyes", territory: "Discovery", status: "Active" },
@@ -26,18 +27,15 @@ function SellerDashboard() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold">Sellers list</h1>
 
-            <Button onClick={()=>navigate('/seller/add')}>
+            <Button onClick={() => navigate('/seller/add')}>
               + Add Seller
             </Button>
           </div>
-
-          {/* Table card */}
           <div className="bg-dark-default">
-            {/* Outer wrapper, keeps rounded corners & border */}
             <div className="rounded-md bg-black-900/40">
               {/* Scroll wrapper */}
-              <div className="overflow-x-auto md:max-h-[420px] md:overflow-y-auto">
-                <table className="min-w-[720px] md:min-w-full w-full text-sm border-separate border-spacing-y-2">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-separate border-spacing-y-2">
                   {/* Gradient header */}
                   <thead>
                     <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
@@ -51,7 +49,7 @@ function SellerDashboard() {
                         Territory
                       </th>
                       <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">
-                        Status
+                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -82,6 +80,14 @@ function SellerDashboard() {
                   </tbody>
                 </table>
               </div>
+
+              {/* pagination */}
+              <Pagination
+              totalPages={20}
+              baseUrl="/"
+              />
+              {/* end pagination */}
+
             </div>
           </div>
 
