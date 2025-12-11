@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type AddApproverModalProps = {
-  isOpen:any;
+  isOpen: any;
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
   confirmLoading?: boolean;
@@ -37,6 +37,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ApproverFormValues>({
     resolver: zodResolver(approverSchema),
@@ -49,11 +50,18 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   const handleConfirmClick = async () => {
     await handleSubmit(async () => {
       await onConfirm();
+      reset()
     })();
   };
 
+  const resetAll = () => {
+    setValue("email", '')
+    setValue("name", '')
+    onClose()
+  }
+
   useEffect(() => {
-    const data=isOpen
+    const data = isOpen
     if (data?.email) {
       reset(data)
     }
@@ -62,7 +70,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   return (
     <Modal
       isOpen={Boolean(isOpen)}
-      onClose={onClose}
+      onClose={resetAll}
       disableOutsideClick={disableOutsideClick || confirmLoading}
       disableEsc={confirmLoading}
       ariaLabelledBy="delete-modal-title"
@@ -74,7 +82,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
     >
       <button
         type="button"
-        onClick={onClose}
+        onClick={resetAll}
         disabled={confirmLoading}
         className={clsx(
           "absolute right-3 top-3 border opacity-65 rounded-full w-5 h-5 flex items-center justify-center hover:text-gray-200",
@@ -93,7 +101,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
             id="delete-modal-title"
             className="text-2xl font-bold text-white mb-3"
           >
-           {isOpen?.email?'Edit Approver':'Add Approver'} 
+            {isOpen?.email ? 'Edit Approver' : 'Add Approver'}
           </h2>
           <div className="text-[#FEFFFFCC]">
             We just need to know a few things about your Approver.
@@ -146,7 +154,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
                   disabled={confirmLoading}
                   className="w-full min-h-[56px] !text-lg"
                 >
-                  {confirmLoading ? "Submitting..." :isOpen?.email?"Update Details": "Save Details"}
+                  {confirmLoading ? "Submitting..." : isOpen?.email ? "Update Details" : "Save Details"}
                 </Button>
               </div>
             </form>

@@ -98,7 +98,7 @@ function Approvers() {
             />
             <AddApproverModal
                 isOpen={isApproverModal}
-                onClose={() => setIsApproverModal("")}
+                onClose={() => {setIsApproverModal("")}}
                 onConfirm={() => setIsApproverModal("")}
             />
 
