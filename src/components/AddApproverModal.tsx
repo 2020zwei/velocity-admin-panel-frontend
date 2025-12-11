@@ -1,5 +1,4 @@
-// src/components/ui/AddApproverModal.tsx
-import React, { type ReactNode } from "react";
+import React, { useEffect } from "react";
 import clsx from "clsx";
 import { Button } from "./Button";
 import Modal from "./Modal";
@@ -8,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 type AddApproverModalProps = {
-  isOpen: boolean;
+  isOpen:any;
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
   confirmLoading?: boolean;
@@ -17,7 +16,7 @@ type AddApproverModalProps = {
 };
 
 const approverSchema = z.object({
-  approverName: z.string().min(1, "Approver name is required"),
+  name: z.string().min(1, "Approver name is required"),
   email: z
     .string()
     .min(1, "Email is required")
@@ -37,11 +36,12 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ApproverFormValues>({
     resolver: zodResolver(approverSchema),
     defaultValues: {
-      approverName: "",
+      name: "",
       email: "",
     },
   });
@@ -52,11 +52,17 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
     })();
   };
 
+  useEffect(() => {
+    const data=isOpen
+    if (data?.email) {
+      reset(data)
+    }
+  }, [isOpen])
+
   return (
     <Modal
-      isOpen={isOpen}
+      isOpen={Boolean(isOpen)}
       onClose={onClose}
-      // avoid closing by outside click or ESC while loading
       disableOutsideClick={disableOutsideClick || confirmLoading}
       disableEsc={confirmLoading}
       ariaLabelledBy="delete-modal-title"
@@ -66,7 +72,6 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
         className
       )}
     >
-      {/* Close button (top-right) */}
       <button
         type="button"
         onClick={onClose}
@@ -88,7 +93,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
             id="delete-modal-title"
             className="text-2xl font-bold text-white mb-3"
           >
-            Add Approver
+           {isOpen?.email?'Edit Approver':'Add Approver'} 
           </h2>
           <div className="text-[#FEFFFFCC]">
             We just need to know a few things about your Approver.
@@ -108,11 +113,11 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
                   type="email"
                   placeholder="e.g. alex@salespartner.com"
                   className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
-                  {...register("approverName")}
+                  {...register("name")}
                 />
-                {errors.approverName && (
+                {errors.name && (
                   <p className="mt-1 text-xs text-red-500 text-start">
-                    {errors.approverName.message}
+                    {errors.name.message}
                   </p>
                 )}
               </div>
@@ -141,7 +146,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
                   disabled={confirmLoading}
                   className="w-full min-h-[56px] !text-lg"
                 >
-                  {confirmLoading ? "Submitting..." : "Save Details"}
+                  {confirmLoading ? "Submitting..." :isOpen?.email?"Update Details": "Save Details"}
                 </Button>
               </div>
             </form>

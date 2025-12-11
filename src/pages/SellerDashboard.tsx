@@ -3,7 +3,7 @@ import DeleteModal from "@/components/DeleteModal";
 import Pagination from "@/components/Pagination";
 import TableActions from "@/components/TableActions";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const sellers = [
   { id: 1, name: "Acme Corp", email: "John Reyes", territory: "Discovery", status: "Active" },
@@ -15,9 +15,12 @@ const sellers = [
 function SellerDashboard() {
   const [isDelete, setIsDelete] = useState(false);
   const navigate = useNavigate();
-  const handleAction = (id: unknown, type: string) => {
+  const handleAction = (item: unknown, type: string) => {
     if (type === 'delete') {
       setIsDelete(true);
+    }
+    else if (type === 'edit') {
+      navigate(`/seller/add`,{state:item})
     }
   }
   return (
@@ -72,7 +75,7 @@ function SellerDashboard() {
                         </td>
                         <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
                           <div className="flex items-center justify-end gap-4">
-                            <TableActions id={seller.id} onClick={handleAction} />
+                            <TableActions item={seller} onClick={handleAction} />
                           </div>
                         </td>
                       </tr>
@@ -81,12 +84,10 @@ function SellerDashboard() {
                 </table>
               </div>
 
-              {/* pagination */}
               <Pagination
-              totalPages={20}
-              baseUrl="/"
+                totalPages={20}
+                baseUrl="/"
               />
-              {/* end pagination */}
 
             </div>
           </div>

@@ -5,7 +5,6 @@ import DeleteModal from "@/components/DeleteModal";
 import Pagination from "@/components/Pagination";
 import TableActions from "@/components/TableActions";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const sellers = [
     { id: 1, name: "Acme Corp", email: "John Reyes", },
@@ -16,10 +15,13 @@ const sellers = [
 
 function Approvers() {
     const [isDelete, setIsDelete] = useState(false);
-    const [isAdd, setIsAdd] = useState(false);
-    const handleAction = (id: unknown, type: string) => {
+    const [isApproverModal, setIsApproverModal] = useState<any>("");
+    const handleAction = (item: unknown, type: string) => {
         if (type === 'delete') {
             setIsDelete(true);
+        }
+        else if(type ==="edit"){
+            setIsApproverModal(item)
         }
     }
     return (
@@ -29,7 +31,7 @@ function Approvers() {
                     <div className="flex items-center justify-between mb-6">
                         <h1 className="text-2xl font-semibold">Approvers</h1>
 
-                        <Button onClick={() => setIsAdd(true)}>
+                        <Button onClick={() => setIsApproverModal(true)}>
                             + Add Approver
                         </Button>
                     </div>
@@ -71,7 +73,7 @@ function Approvers() {
                                                 </td>
                                                 <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
                                                     <div className="flex items-center justify-end gap-4">
-                                                        <TableActions id={seller.id} onClick={handleAction} />
+                                                        <TableActions item={seller} onClick={handleAction} />
                                                     </div>
                                                 </td>
                                             </tr>
@@ -95,9 +97,9 @@ function Approvers() {
                 onConfirm={() => setIsDelete(false)}
             />
             <AddApproverModal
-                isOpen={isAdd}
-                onClose={() => setIsAdd(false)}
-                onConfirm={() => setIsAdd(false)}
+                isOpen={isApproverModal}
+                onClose={() => setIsApproverModal("")}
+                onConfirm={() => setIsApproverModal("")}
             />
 
         </>

@@ -2,8 +2,8 @@ import { Button } from '@/components/Button'
 import Dropdown from '@/components/Dropdown'
 import Icon from '@/components/Icon'
 import clsx from 'clsx'
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -43,9 +43,9 @@ const keywords = [
     },
 ]
 
-// Zod schema
+
 const sellerSchema = z.object({
-    salesAgentName: z
+    name: z
         .string()
         .min(1, "Sales Agent Name is required"),
     email: z
@@ -74,17 +74,21 @@ const AddSeller = () => {
     const [filterdKeywords, setFilterdKeywords] = useState(keywords ?? [])
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const navigate = useNavigate()
+    const { state } = useLocation();
+
+    console.log(state)
 
     const {
         register,
         handleSubmit,
         setValue,
         control,
+        reset,
         formState: { errors },
     } = useForm<SellerFormValues>({
         resolver: zodResolver(sellerSchema),
         defaultValues: {
-            salesAgentName: "",
+            name: "",
             email: "",
             dealerCode: "",
             territoryState: "",
@@ -115,21 +119,24 @@ const AddSeller = () => {
         if (found) {
             const filtered = selectedKeys.filter((label: string) => label !== item.label)
             setSelectedKeys(filtered)
-            // sync with react-hook-form
             setValue("keywords", filtered, { shouldValidate: true })
         }
         else {
             const updated = [...selectedKeys, item.label]
             setSelectedKeys((prev: string[]) => [...prev, item.label])
-            // sync with react-hook-form
             setValue("keywords", updated, { shouldValidate: true })
         }
     }
 
     const onSubmit = (data: SellerFormValues) => {
         console.log("Form submitted:", data)
-        // you can do whatever you want here (API call, etc.)
     }
+
+    useEffect(() => {
+        if (state) {
+            reset(state)
+        }
+    }, [state])
 
     return (
         <>
@@ -173,11 +180,11 @@ const AddSeller = () => {
                                         type="text"
                                         placeholder='eg. Alex Martinez'
                                         className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
-                                        {...register("salesAgentName")}
+                                        {...register("name")}
                                     />
-                                    {errors.salesAgentName && (
+                                    {errors.name && (
                                         <p className="text-xs text-red-500 mt-1">
-                                            {errors.salesAgentName.message}
+                                            {errors.name.message}
                                         </p>
                                     )}
                                 </div>
@@ -334,7 +341,7 @@ const AddSeller = () => {
                         </div>
                         <div className='flex items-center mt-10 gap-10'>
                             <Button className='!rounded-full' type="submit">
-                                Submit intake
+                               {state?"Update":"Submit intake"}
                             </Button>
                             <div className='flex items-center whitespace-nowrap text-[#FEFFFFCC] text-base'>
                                 <span className=' font-semibold text-white pe-1'>Heads up:</span>
