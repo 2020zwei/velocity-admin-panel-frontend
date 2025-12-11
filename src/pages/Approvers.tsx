@@ -2,15 +2,16 @@
 import AddApproverModal from "@/components/AddApproverModal";
 import { Button } from "@/components/Button";
 import DeleteModal from "@/components/DeleteModal";
+import Pagination from "@/components/Pagination";
 import TableActions from "@/components/TableActions";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const sellers = [
-    { id: 1, name: "Acme Corp", email: "John Reyes", territory: "Discovery", status: "Active" },
-    { id: 2, name: "Acme Corp", email: "John Reyes", territory: "Working", status: "Active" },
-    { id: 3, name: "Acme Corp", email: "John Reyes", territory: "Close/Won", status: "Active" },
-    { id: 4, name: "Acme Corp", email: "John Reyes", territory: "Working", status: "Active" },
+    { id: 1, name: "Acme Corp", email: "John Reyes", },
+    { id: 2, name: "Acme Corp", email: "John Reyes",},
+    { id: 3, name: "Acme Corp", email: "John Reyes", },
+    { id: 4, name: "Acme Corp", email: "John Reyes",},
 ];
 
 function Approvers() {
@@ -49,11 +50,8 @@ function Approvers() {
                                             <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">
                                                 Email
                                             </th>
-                                            <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">
-                                                Territory
-                                            </th>
                                             <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">
-                                                Status
+                                                Actions
                                             </th>
                                         </tr>
                                     </thead>
@@ -72,9 +70,6 @@ function Approvers() {
                                                     {seller.email}
                                                 </td>
                                                 <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                                                    {seller.territory}
-                                                </td>
-                                                <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
                                                     <div className="flex items-center justify-end gap-4">
                                                         <TableActions id={seller.id} onClick={handleAction} />
                                                     </div>
@@ -84,6 +79,10 @@ function Approvers() {
                                     </tbody>
                                 </table>
                             </div>
+                            <Pagination
+                                totalPages={20}
+                                baseUrl="/approvers"
+                            />
                         </div>
                     </div>
 
@@ -95,12 +94,12 @@ function Approvers() {
                 onClose={() => setIsDelete(false)}
                 onConfirm={() => setIsDelete(false)}
             />
-             <AddApproverModal
+            <AddApproverModal
                 isOpen={isAdd}
                 onClose={() => setIsAdd(false)}
                 onConfirm={() => setIsAdd(false)}
             />
-            
+
         </>
     );
 }

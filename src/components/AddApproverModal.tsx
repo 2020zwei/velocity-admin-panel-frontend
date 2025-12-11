@@ -3,6 +3,9 @@ import React, { type ReactNode } from "react";
 import clsx from "clsx";
 import { Button } from "./Button";
 import Modal from "./Modal";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type AddApproverModalProps = {
   isOpen: boolean;
@@ -13,6 +16,16 @@ type AddApproverModalProps = {
   className?: string;
 };
 
+const approverSchema = z.object({
+  approverName: z.string().min(1, "Approver name is required"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+});
+
+type ApproverFormValues = z.infer<typeof approverSchema>;
+
 const AddApproverModal: React.FC<AddApproverModalProps> = ({
   isOpen,
   onConfirm,
@@ -21,8 +34,22 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   disableOutsideClick = false,
   className,
 }) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ApproverFormValues>({
+    resolver: zodResolver(approverSchema),
+    defaultValues: {
+      approverName: "",
+      email: "",
+    },
+  });
+
   const handleConfirmClick = async () => {
-    await onConfirm();
+    await handleSubmit(async () => {
+      await onConfirm();
+    })();
   };
 
   return (
@@ -56,7 +83,6 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
 
       {/* Icon + Title */}
       <div className="flex gap-3 flex-col justify-center items-center w-full px-2 pb-4">
-
         <div className="flex flex-col items-center justify-center w-full">
           <h2
             id="delete-modal-title"
@@ -64,28 +90,49 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
           >
             Add Approver
           </h2>
-          <div className="text-[#FEFFFFCC]">We just need to know a few things about your Approver.</div>
+          <div className="text-[#FEFFFFCC]">
+            We just need to know a few things about your Approver.
+          </div>
 
           <div
             id="delete-modal-description"
             className="mt-1 text-sm text-gray-200 text-center w-full"
           >
             <form action="" className="flex-1 pt-6">
-
-              <div className='flex flex-col gap-2 w-full'>
-                <label htmlFor="" className=' font-medium text-base text-start'>
+              <div className="flex flex-col gap-2 w-full">
+                <label htmlFor="" className=" font-medium text-base text-start">
                   Approver Name
-                  <span className='text-[#EE2B93] ps-1'>*</span>
+                  <span className="text-[#EE2B93] ps-1">*</span>
                 </label>
-                <input type="email" placeholder='e.g. alex@salespartner.com' className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]' />
+                <input
+                  type="email"
+                  placeholder="e.g. alex@salespartner.com"
+                  className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
+                  {...register("approverName")}
+                />
+                {errors.approverName && (
+                  <p className="mt-1 text-xs text-red-500 text-start">
+                    {errors.approverName.message}
+                  </p>
+                )}
               </div>
 
-              <div className='flex flex-col gap-2 w-full text-start mt-5'>
-                <label htmlFor="" className=' font-medium text-base'>
+              <div className="flex flex-col gap-2 w-full text-start mt-5">
+                <label htmlFor="" className=" font-medium text-base">
                   Email
-                  <span className='text-[#EE2B93] ps-1'>*</span>
+                  <span className="text-[#EE2B93] ps-1">*</span>
                 </label>
-                <input type="email" placeholder='e.g. alex@salespartner.com' className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]' />
+                <input
+                  type="email"
+                  placeholder="e.g. alex@salespartner.com"
+                  className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
               <div className="mt-6 flex items-center justify-end gap-3">
                 <Button
