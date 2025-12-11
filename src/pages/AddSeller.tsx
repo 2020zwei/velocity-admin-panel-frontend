@@ -66,7 +66,6 @@ const sellerSchema = z.object({
         .min(1, "Select at least one keyword"),
     approvers: z
         .array(z.string())
-        .min(1, "Select at least one approver"),
 })
 
 type SellerFormValues = z.infer<typeof sellerSchema>
@@ -329,11 +328,6 @@ const AddSeller = () => {
                                         />
                                     )}
                                 />
-                                {errors.approvers && (
-                                    <p className="text-xs text-red-500 mt-1">
-                                        {errors.approvers.message}
-                                    </p>
-                                )}
                             </div>
 
 
