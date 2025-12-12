@@ -7,40 +7,11 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useApi } from '@/hooks/useApi'
 
 const keywords = [
-    {
-        id: 1,
-        label: "New bussiness Registration"
-    },
-    {
-        id: 2,
-        label: "Recenet dunding announcemnet"
-    },
-    {
-        id: 3,
-        label: "Hiring for sales role"
-    },
-    {
-        id: 4,
-        label: "Office relocation/ New HQ"
-    },
-    {
-        id: 5,
-        label: "Website traffic spike"
-    },
-    {
-        id: 6,
-        label: "New location opening"
-    },
-    {
-        id: 7,
-        label: "Contract renewal window"
-    },
-    {
-        id: 8,
-        label: "RFP / bid activity"
-    },
+    "helloo",
+    "hey"
 ]
 
 
@@ -73,10 +44,14 @@ type SellerFormValues = z.infer<typeof sellerSchema>
 const AddSeller = () => {
     const [filterdKeywords, setFilterdKeywords] = useState(keywords ?? [])
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+    const { data, isLoading, error, refetch: login } = useApi<{ results: any[] }>({
+        url: "/sales-reps/invite/",
+        method: "post",
+        auto: false,
+        transformResponse: (d) => d,
+    });
     const navigate = useNavigate()
     const { state } = useLocation();
-
-    console.log(state)
 
     const {
         register,
@@ -106,8 +81,8 @@ const AddSeller = () => {
             return;
         }
 
-        const searched = keywords.filter((item) =>
-            item.label?.toLowerCase().includes(val)
+        const searched = keywords.filter((lable) =>
+            lable?.toLowerCase().includes(val)
         );
 
         setFilterdKeywords(searched);
@@ -115,22 +90,28 @@ const AddSeller = () => {
 
 
     const onSelect = (item: any) => {
-        const found = selectedKeys.includes(item.label)
+        const found = selectedKeys.includes(item)
         if (found) {
-            const filtered = selectedKeys.filter((label: string) => label !== item.label)
+            const filtered = selectedKeys.filter((label: string) => label !== item)
             setSelectedKeys(filtered)
             setValue("keywords", filtered, { shouldValidate: true })
         }
         else {
-            const updated = [...selectedKeys, item.label]
-            setSelectedKeys((prev: string[]) => [...prev, item.label])
+            const updated = [...selectedKeys, item]
+            setSelectedKeys((prev: string[]) => [...prev, item])
             setValue("keywords", updated, { shouldValidate: true })
         }
     }
 
-    const onSubmit = (data: SellerFormValues) => {
-        console.log("Form submitted:", data)
-    }
+    const onSubmit = async (values:any) => {
+        try {
+            console.log("API response", values);
+            await login({ body: values });
+            reset();
+        } catch (err) {
+            console.error("submit error", err);
+        }
+    };
 
     useEffect(() => {
         if (state) {
@@ -146,7 +127,7 @@ const AddSeller = () => {
                     <p className='text-base max-w-[470px] text-[#FEFFFFCC]'>Zero-noise onboarding: upload your roster or add each seller, then submit once for your org.</p>
                 </div>
                 <div className='flex items-center justify-between gap-3'>
-                    <div className='bg-[#000000] border border-[#212129] me-5 px-2 h-6 min-w-[104px] rounded-full text-[10px] flex items-center justify-end gap-2'>
+                    <div className='bg-[#000000] border border-[#212129] sm:me-5 px-2 h-6 min-w-[104px] rounded-full text-[10px] flex items-center justify-end gap-2'>
                         <span className='w-2 h-2 rounded-full bg-[#EE2B93]'></span>
                         Zero noise intake
                     </div>
@@ -205,7 +186,7 @@ const AddSeller = () => {
                                         </p>
                                     )}
                                 </div>
-                                <div className='flex items-center justify-between gap-3'>
+                                <div className='sm:flex items-center justify-between gap-3'>
                                     <div className='flex flex-col gap-2 flex-1'>
                                         <label htmlFor="" className=' font-medium text-base'>
                                             Dealer Code
@@ -285,7 +266,7 @@ const AddSeller = () => {
                                             onChange={handleKeySearch}
                                             type="text"
                                             placeholder="Search Keyword..."
-                                            className={clsx("bg-transparent outline-none flex-1 text-white md:block hidden")}
+                                            className={clsx("bg-transparent outline-none flex-1 text-white")}
                                         />
 
                                     </div>
@@ -296,17 +277,17 @@ const AddSeller = () => {
                                     )}
                                 </div>
                                 <div>
-                                    {filterdKeywords.length ? filterdKeywords.map((item) => (
+                                    {filterdKeywords.length ? filterdKeywords.map((lable) => (
                                         <button
-                                            onClick={() => onSelect(item)}
+                                            onClick={() => onSelect(lable)}
                                             type='button'
-                                            key={item.id}
+                                            key={lable}
                                             className={clsx(
                                                 'my-2 mx-1 rounded-full px-3 py-1 border border-[#EE2B93] text-[#FFFFFF80] hover:bg-[#EE2B934D] hover:text-white hover:border-[#EE2B934D] duration-300',
-                                                selectedKeys.includes(item.label) ? "bg-[#EE2B934D] text-white" : ""
+                                                selectedKeys.includes(lable) ? "bg-[#EE2B934D] text-white" : ""
                                             )}
                                         >
-                                            {item.label}
+                                            {lable}
                                         </button>
                                     )) : <div className='text-center font-semibold'>Keywords not found</div>}
 
@@ -339,26 +320,26 @@ const AddSeller = () => {
 
 
                         </div>
-                        <div className='flex items-center mt-10 gap-10'>
+                        <div className='lg-xl:flex items-center mt-10 gap-10'>
                             <Button className='!rounded-full' type="submit">
-                               {state?"Update":"Submit intake"}
+                                {state ? "Update" : "Submit intake"}
                             </Button>
-                            <div className='flex items-center whitespace-nowrap text-[#FEFFFFCC] text-base'>
-                                <span className=' font-semibold text-white pe-1'>Heads up:</span>
+                            <p className='flex lg-xl:whitespace-nowrap text-[#FEFFFFCC] text-base lg-xl:pt-0 pt-5'>
+                                <span className=' font-semibold text-white pe-1 whitespace-nowrap'>Heads up:</span>
                                 by submitting, you’re authorizing VelocityIQ to onboard these details into your workspace.
-                            </div>
+                            </p>
                         </div>
                     </form>
                 </div>
 
 
-                <div className='text-[#FEFFFFCC] text-base border border-[#212129] rounded-2xl px-8 py-8 bg-dark-gradient flex flex-col gap-5 h-fit'>
+                <div className='text-[#FEFFFFCC] lg-xl:order-1 -order-1 text-base border border-[#212129] rounded-2xl px-8 py-8 bg-dark-gradient flex flex-col gap-5 h-fit'>
 
                     <div>
                         <div className='font-semibold text-2xl text-white'>What happens next?</div>
                         <p>Add each seller one by one, save them to your intake list, then submit when you're done.</p>
                     </div>
-                    <ul className='pt-6 list-disc ps-4'>
+                    <ul className='list-disc ps-4'>
                         <li>We’ll confirm seller identity and dealer code against your agreement.</li>
                         <li>Territory (state + ZIPs) helps route the right buyer Signals and opportunities.</li>
                         <li>Signals help VelocityIQ prioritize who to surface first in your sellers’ day.</li>

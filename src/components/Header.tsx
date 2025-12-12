@@ -16,13 +16,14 @@ const Header = ({ isSidebarOpen,onMenuClick }: HeaderProps) => {
     <>
       {/* Search */}
       <div className="w-full flex items-center gap-6">
-        <div className='min-w-[250px] flex items-center justify-between'><Link to="/"><img src={velocitylogo} alt='velocitylogo' /></Link>
+        {!isSearchOpen&&
+        <div className='sm:min-w-[250px] flex items-center justify-between'><Link to="/"><img src={velocitylogo} alt='velocitylogo' /></Link>
           <button
-            className="inline-flex items-center justify-center rounded-md p-2 hover:bg-white/10 lg-xl:hidden"
-            onClick={onMenuClick}
+            className="inline-flex items-center justify-center rounded-md p-2 hover:bg-white/10 lg-xl:hidden relative z-[10000]"
+            onClick={onMenuClick} 
           ><Icon name={isSidebarOpen?'times':'bars'}/></button>
-        </div>
-        <div className={clsx("flex items-center gap-2 h-11 px-3 rounded-md w-[300px] md:border border-[#212129] md:relative absolute",isSearchOpen?"!border bg-black-800 w-[75%]":"")}>
+        </div>}
+        <div className={clsx("flex items-center gap-2 h-11 px-3 rounded-md w-[300px] md:border border-[#212129] md:relative absolute",isSearchOpen?"!border bg-black-800 w-[95%]":"")}>
           <span className={clsx("opacity-60 md:block hidden",isSearchOpen?"!block":"")}><Icon name='search' /></span>
           <input
             type="text"
@@ -35,7 +36,7 @@ const Header = ({ isSidebarOpen,onMenuClick }: HeaderProps) => {
       </div>
 
       {/* Profile */}
-      <div className='w-fit'> <ProfileDropdown /></div>
+     {!isSearchOpen&& <div className='w-fit'> <ProfileDropdown /></div>}
     </>
   )
 }

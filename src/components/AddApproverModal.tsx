@@ -5,6 +5,8 @@ import Modal from "./Modal";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Spinner from "./Spinner";
+import { useApi } from "@/hooks/useApi";
 
 type AddApproverModalProps = {
   isOpen: any;
@@ -33,6 +35,15 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   disableOutsideClick = false,
   className,
 }) => {
+
+  const { data, isLoading, error, refetch: update } = useApi<{ results: any[] }>({
+    url: `/approvers/${isOpen?.id}`,
+    method: "post",
+    auto: false,
+    transformResponse: (d) => d,
+  });
+
+
   const {
     register,
     handleSubmit,
@@ -47,12 +58,18 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
     },
   });
 
-  const handleConfirmClick = async () => {
-    await handleSubmit(async () => {
-      await onConfirm();
-      reset()
-    })();
+  const onSubmit = async (values: ApproverFormValues) => {
+    try {
+      console.log("API response", values);
+      onConfirm()
+      await update({ body: values });
+      reset();
+    } catch (err) {
+      console.error("submit error", err);
+    }
   };
+
+
 
   const resetAll = () => {
     setValue("email", '')
@@ -67,6 +84,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
     }
   }, [isOpen])
 
+
   return (
     <Modal
       isOpen={Boolean(isOpen)}
@@ -76,7 +94,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
       ariaLabelledBy="delete-modal-title"
       ariaDescribedBy="delete-modal-description"
       contentClassName={clsx(
-        "relative w-full max-w-[550px] rounded-2xl bg-black-800 text-white shadow-2xl px-6 py-5 transition-transform transition-opacity duration-150 opacity-100 scale-100 relative w-full max-w-md px-6 py-5 bg-black-800 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-150",
+        "relative w-full max-w-[550px] rounded-2xl bg-black-800 text-white shadow-2xl sm:!px-6 !px-1 py-5 transition-transform transition-opacity duration-150 opacity-100 scale-100 relative w-full max-w-md px-6 py-5 bg-black-800 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-150",
         className
       )}
     >
@@ -111,14 +129,14 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
             id="delete-modal-description"
             className="mt-1 text-sm text-gray-200 text-center w-full"
           >
-            <form action="" className="flex-1 pt-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="flex-1 pt-6">
               <div className="flex flex-col gap-2 w-full">
                 <label htmlFor="" className=" font-medium text-base text-start">
                   Approver Name
                   <span className="text-[#EE2B93] ps-1">*</span>
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   placeholder="e.g. alex@salespartner.com"
                   className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
                   {...register("name")}
@@ -149,12 +167,11 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
               </div>
               <div className="mt-6 flex items-center justify-end gap-3">
                 <Button
-                  type="button"
-                  onClick={handleConfirmClick}
-                  disabled={confirmLoading}
+                  type="submit"
+                  disabled={isLoading}
                   className="w-full min-h-[56px] !text-lg"
                 >
-                  {confirmLoading ? "Submitting..." : isOpen?.email ? "Update Details" : "Save Details"}
+                  {isLoading ? <Spinner /> : isOpen?.email ? "Update Details" : "Save Details"}
                 </Button>
               </div>
             </form>

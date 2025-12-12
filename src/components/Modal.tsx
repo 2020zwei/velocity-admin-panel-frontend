@@ -104,7 +104,7 @@ const Modal: React.FC<ModalProps> = ({
     return createPortal(
         <div
             className={clsx(
-                "fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm",
+                "fixed inset-0 z-[999] px-4 flex items-center justify-center bg-black/40 backdrop-blur-sm",
                 overlayClassName
             )}
             onClick={handleOverlayClick}
