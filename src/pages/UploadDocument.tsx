@@ -83,6 +83,7 @@
 
 import { Button } from '@/components/Button'
 import Icon from '@/components/Icon'
+import { useApi } from '@/hooks/useApi'
 import React, {
     useRef,
     useState,
@@ -102,6 +103,13 @@ const UploadDocument = () => {
     const [error, setError] = useState<string | null>(null)
     const [isDragging, setIsDragging] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    const { data, isLoading, error: apiError, refetch: upload } = useApi<{ results: any[] }>({
+        url: "/sales-reps/invite/",
+        method: "post",
+        auto: false,
+        headers: {},
+    });
 
     const openFileDialog = () => {
         if (fileInputRef.current) {
@@ -171,22 +179,36 @@ const UploadDocument = () => {
         handleFile(file)
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!selectedFile) {
-            setError('Please upload a valid CSV or Excel file before submitting.')
-            return
+            setError('Please upload a valid CSV or Excel file before submitting.');
+            return;
         }
 
-        setIsSubmitting(true)
+        setIsSubmitting(true);
+        setError(null);
 
-        // TODO: replace with actual upload / API call
-        console.log('Submitting intake with file:', selectedFile)
+        try {
+            const formData = new FormData();
+            formData.append("file", selectedFile);
 
-        setTimeout(() => {
-            setIsSubmitting(false)
-            // navigate('/seller/summary')
-        }, 500)
-    }
+            const response = await upload({ body: formData });
+            console.log("Upload response:", response);
+
+            // Reset file input
+            setSelectedFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+
+            // navigate("/seller/summary"); // optional
+        } catch (err: any) {
+            console.error("Upload failed:", err);
+            setError("Upload failed. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+
 
     const clearFile = () => {
         setSelectedFile(null)
@@ -210,7 +232,7 @@ const UploadDocument = () => {
     return (
         <div className="space-y-8">
             {/* Top header row */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-[50px]">
                 <div className="max-w-xl">
                     <h1 className="text-xl font-semibold md:text-2xl">
                         Seller Intake
@@ -247,7 +269,7 @@ const UploadDocument = () => {
             {/* Main content grid */}
             <div className="grid gap-6 mt-2 lg-xl:grid-cols-2">
                 {/* Upload card */}
-                <div className="border border-[#212129] rounded-2xl px-6 pb-6 pt-3 bg-dark-gradient flex flex-col gap-3 h-fit">
+                <div className="border border-[#212129] rounded-2xl p-8 bg-dark-gradient flex flex-col gap-3 h-fit">
                     <div>
                         <div className="font-semibold text-xl sm:text-2xl text-white">
                             Upload your existing roster
@@ -332,16 +354,16 @@ const UploadDocument = () => {
                 </div>
 
                 {/* Sidebar card */}
-                <div className="pb-5 text-[#FEFFFFCC] text-sm sm:text-base border border-[#212129] rounded-2xl px-4 py-4 sm:px-6 lg:px-8 bg-dark-gradient flex flex-col gap-4 h-fit">
+                <div className="text-[#FEFFFFCC] text-sm sm:text-base border border-[#212129] rounded-2xl p-8 bg-dark-gradient flex flex-col gap-4 h-fit">
                     <div>
                         <div className="font-semibold text-xl sm:text-2xl text-white">
                             What happens next?
                         </div>
-                        <p className="mt-2">
+                        <p className="">
                             Once you submit, VelocityIQ will validate your data, map territories, and prep your sellers for Signals and VCORE.
                         </p>
                     </div>
-                    <ul className="list-disc ps-4 space-y-1">
+                    <ul className="list-disc ps-4 space-y-1 pt-1">
                         <li>We’ll confirm seller identity and dealer code against your agreement.</li>
                         <li>Territory (state + ZIPs) helps route the right buyer Signals and opportunities.</li>
                         <li>Signals help VelocityIQ prioritize who to surface first in your sellers’ day.</li>
@@ -363,11 +385,10 @@ const UploadDocument = () => {
                 >
                     {isSubmitting ? 'Submitting…' : 'Submit intake'}
                 </Button>
-                <div className="text-xs sm:text-sm md:text-base text-[#FEFFFFCC] md:max-w-xl">
-                    <span className="font-semibold text-white pe-1">Heads up:</span>
-                    by submitting, you’re authorizing VelocityIQ to onboard these details
-                    into your workspace.
-                </div>
+                <p className='flex lg-xl:whitespace-nowrap text-[#FEFFFFCC] text-base lg-xl:pt-0 pt-5'>
+                    <span className=' font-semibold text-white pe-1 whitespace-nowrap'>Heads up:</span>
+                    by submitting, you’re authorizing VelocityIQ to onboard these details into your workspace.
+                </p>
             </div>
         </div>
     )

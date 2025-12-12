@@ -41,7 +41,7 @@ const SideBar = () => {
         location.pathname === "/seller/upload";
 
     return (
-        <div className="mt-6 px-[14px] flex-1 flex flex-col gap-1">
+        <div className="mt-6 px-[14px] flex-1 flex flex-col gap-1 w-[273px]">
             {navItems.map((item) => (
                 <NavLink
                     key={item.to}
