@@ -8,6 +8,7 @@ import Approvers from "./pages/Approvers";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import IndustrySetupPage from "./pages/IndustrySetupPage";
 
 
 const App: React.FC = () => {
@@ -23,6 +24,7 @@ const App: React.FC = () => {
             <Route index element={<SellerDashboard />} />
             <Route path="/seller/add" element={<AddSeller />} />
             <Route path="/seller/upload" element={<UploadDocument />} />
+            <Route path="/industory-setup" element={<IndustrySetupPage />} />
             <Route path="/approvers" element={<Approvers />} />
           </Route>
         </Route>

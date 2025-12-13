@@ -102,3 +102,27 @@
     /* Adjust if needed */
   }
 }
+
+.gradient-border {
+  position: relative;
+  border-radius: 12px;
+  background: #0B0B0E;
+  
+}
+
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  /* border thickness */
+  border-radius: 12px;
+  background: linear-gradient(123.22deg, #D4368E 15.32%, #9333C8 85.26%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
