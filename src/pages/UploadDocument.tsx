@@ -102,10 +102,9 @@ const UploadDocument = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [isDragging, setIsDragging] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const { data, isLoading, error: apiError, refetch: upload } = useApi<{ results: any[] }>({
-        url: "/sales-reps/invite/",
+    const { isLoading, refetch: upload } = useApi<{ results: any[] }>({
+        url: "/sales-reps/invite/csv/",
         method: "post",
         auto: false,
         headers: {},
@@ -184,27 +183,15 @@ const UploadDocument = () => {
             setError('Please upload a valid CSV or Excel file before submitting.');
             return;
         }
-
-        setIsSubmitting(true);
-        setError(null);
-
         try {
             const formData = new FormData();
             formData.append("file", selectedFile);
-
-            const response = await upload({ body: formData });
-            console.log("Upload response:", response);
-
-            // Reset file input
+            await upload({ body: formData });
             setSelectedFile(null);
+            navigate("/")
             if (fileInputRef.current) fileInputRef.current.value = "";
-
-            // navigate("/seller/summary"); // optional
         } catch (err: any) {
             console.error("Upload failed:", err);
-            setError("Upload failed. Please try again.");
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -218,7 +205,6 @@ const UploadDocument = () => {
         }
     }
 
-    // utils/downloadTemplate.ts
     const downloadTemplate = () => {
         const link = document.createElement("a");
         link.href = "/sample.csv";
@@ -381,9 +367,9 @@ const UploadDocument = () => {
                 <Button
                     className="!rounded-full disabled:opacity-60 disabled:cursor-not-allowed w-full md:w-auto"
                     onClick={handleSubmit}
-                    disabled={isSubmitting}
+                    isLoading={isLoading}
                 >
-                    {isSubmitting ? 'Submitting…' : 'Submit intake'}
+                    Submit intake
                 </Button>
                 <p className='flex lg-xl:whitespace-nowrap text-[#FEFFFFCC] text-base lg-xl:pt-0 pt-5'>
                     <span className=' font-semibold text-white pe-1 whitespace-nowrap'>Heads up:</span>

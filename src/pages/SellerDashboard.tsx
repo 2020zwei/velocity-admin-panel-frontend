@@ -7,53 +7,34 @@ import { useApi } from "@/hooks/useApi";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const sales_reps = [
-  {
-    "id": 1,
-    "name": "Haris Office",
-    "email": "haris.saleem@zweidevs.com",
-    "dealer_code": "2302",
-    "territory_state": "CA",
-    "zip_code": "90001",
-    "keywords": [
-      "helloo"
-    ],
-    "is_active": true,
-    "created_at": "2025-12-12T10:57:07.835535Z",
-    "updated_at": "2025-12-12T11:06:28.888164Z",
-    "approver_ids": [
-      2
-    ]
-  }
-]
 
 function SellerDashboard() {
 
   const [deleteItem, setDeleteItem] = useState<any>("");
   const navigate = useNavigate();
-  const { data, isLoading, error, refetch: callApi } = useApi<{ results: any[] }>({
-    url: `/sales-reps/${deleteItem?.id ?? ''}`,
-    auto: deleteItem?.id ? false : true,
-    method: deleteItem?.id ? "delete" : "get",
+  const { data, isLoading, error, refetch: callApi } = useApi<{ data: { sales_reps: any[] } }>({
+    url: `/sales-reps`,
+    auto: true,
+    method: "get",
     transformResponse: (d) => d
   });
-  const handleAction = (item: unknown, type: string) => {
+  const handleAction = (item: any, type: string) => {
     if (type === "delete") {
-      setDeleteItem(item);
+      setDeleteItem(item?.id);
     } else if (type === "edit") {
-      navigate(`/seller/add`, { state: item });
+      navigate(`/seller/add?edit-id=${item.id}`, { state: item, replace: true });
     }
   };
 
-  const deleteRecored = async () => {
-    setDeleteItem("")
+  const onConfirm = async () => {
     await callApi()
+    setDeleteItem('')
   }
 
   if (isLoading) {
     return <Spinner />
   }
-
+  const sales_reps: any[] = data?.data?.sales_reps ?? []
   return (
     <>
       <div className="min-h-screen bg-black text-white flex">
@@ -64,46 +45,50 @@ function SellerDashboard() {
               + Add Seller
             </Button>
           </div>
-          <div
-            className="w-full overflow-x-auto rounded-md bg-black-900/40"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
-            <table className="w-full text-sm border-separate border-spacing-y-2">
-              <thead>
-                <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
-                  <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap rounded-l-md">Seller Name</th>
-                  <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Email</th>
-                  <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Territory</th>
-                  <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {sales_reps.map((item) => (
-                  <tr key={item.id} className="even:bg-black-800/60 text-white">
-                    <td className="px-4 sm:px-6 py-3 whitespace-nowrap">{item.name}</td>
-                    <td className="px-4 sm:px-6 py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
-                      {item.email}
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 whitespace-nowrap">{item.territory_state}</td>
-                    <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-4">
-                        <TableActions item={item} onClick={handleAction} />
-                      </div>
-                    </td>
+          {(!sales_reps?.length) ? <div className="text-center text-lg">Seles reps not found</div> : <>
+            <div
+              className="w-full overflow-x-auto rounded-md bg-black-900/40"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              <table className="w-full text-sm border-separate border-spacing-y-2">
+                <thead>
+                  <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
+                    <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap rounded-l-md">Seller Name</th>
+                    <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Email</th>
+                    <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Territory</th>
+                    <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
 
-          <div className="mt-4">
-            <Pagination totalPages={20} baseUrl="/" />
-          </div>
+                <tbody>
+                  {sales_reps.map((item) => (
+                    <tr key={item.id} className="even:bg-black-800/60 text-white">
+                      <td className="px-4 sm:px-6 py-3 whitespace-nowrap">{item.name}</td>
+                      <td className="px-4 sm:px-6 py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
+                        {item.email}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 whitespace-nowrap">{item.territory_state}</td>
+                      <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-4">
+                          <TableActions item={item} onClick={handleAction} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+
+            <div className="mt-4">
+              <Pagination totalPages={20} baseUrl="/" />
+            </div>
+          </>
+          }
         </section>
       </div>
 
-      <DeleteModal isOpen={deleteItem} onClose={() => setDeleteItem("")} onConfirm={deleteRecored} />
+      <DeleteModal url="sales-reps" isOpen={deleteItem} onClose={() => setDeleteItem("")} onConfirm={onConfirm} />
     </>
   );
 }

@@ -9,28 +9,37 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import IndustrySetupPage from "./pages/IndustrySetupPage";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ScrollToTop from "./components/ScrollToTop";
+import SetPassword from "./pages/SetPassword";
 
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<Login />} />
-        </Route>
-        {/* protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<SellerDashboard />} />
-            <Route path="/seller/add" element={<AddSeller />} />
-            <Route path="/seller/upload" element={<UploadDocument />} />
-            <Route path="/industory-setup" element={<IndustrySetupPage />} />
-            <Route path="/approvers" element={<Approvers />} />
+    <>
+      <BrowserRouter>
+      <ScrollToTop />
+        <Routes>
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<Login />} />
+              <Route path="/set-password" element={<SetPassword />} />
           </Route>
-        </Route>
-        <Route path="*" element={<div><p>404 Not Found</p></div>} />
-      </Routes>
-    </BrowserRouter>
+          {/* protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<SellerDashboard />} />
+              <Route path="/seller/add" element={<AddSeller />} />
+              <Route path="/seller/upload" element={<UploadDocument />} />
+              {/* <Route path="/industory-setup" element={<IndustrySetupPage />} /> */}
+              <Route path="/approvers" element={<Approvers />} />
+            </Route>
+          </Route>
+          <Route path="*" element={<div><p>404 Not Found</p></div>} />
+        </Routes>
+      </BrowserRouter>
+      <ToastContainer />
+    </>
   );
 };
 

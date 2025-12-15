@@ -21,12 +21,12 @@ type ApproverFormValues = z.infer<typeof approverSchema>;
 
 const Login = () => {
     const { data, isLoading, error, refetch: login } = useApi<{ results: any[] }>({
-        url: "/login/",
+        url: "/signin/",
         method: "post",
         auto: false,
         transformResponse: (d) => d,
     });
-    const navigate=useNavigate()
+    const navigate = useNavigate()
 
     const {
         register,
@@ -43,9 +43,8 @@ const Login = () => {
 
     const onSubmit = async (values: ApproverFormValues) => {
         try {
-            localStorage.setItem("token","token45543gddfgdgfgdf")
+            await login({ body: values });
             navigate('/')
-            await login({ params: values });
             reset();
         } catch (err) {
             console.error("submit error", err);
@@ -97,7 +96,7 @@ const Login = () => {
 
                 <div className="mt-6 flex items-center justify-end gap-3">
                     <Button type="submit" disabled={isLoading} className="w-full h-[56px] !text-lg">
-                        {isLoading ? <Spinner/> : "Login"}
+                        {isLoading ? <Spinner /> : "Login"}
                     </Button>
                 </div>
 

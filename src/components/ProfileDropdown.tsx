@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import Icon from "./Icon";
 import profile from "../assets/profile.png";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+
 
 const ProfileDropdown = () => {
     const [open, setOpen] = useState(false);
@@ -9,9 +11,13 @@ const ProfileDropdown = () => {
     const navigate = useNavigate()
 
     const logout = () => {
-        localStorage.removeItem("token")
-        navigate('/login')
-    }
+        Cookies.remove("access_token", {
+            secure: import.meta.env.PROD,
+            sameSite: "strict",
+        });
+        navigate("/login", { replace: true });
+    };
+
 
     useEffect(() => {
         function handleClickOutside(e: any) {

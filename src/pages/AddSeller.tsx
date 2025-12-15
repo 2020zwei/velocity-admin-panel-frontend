@@ -1,5 +1,5 @@
 import { Button } from '@/components/Button'
-import Dropdown from '@/components/Dropdown'
+import Dropdown, { type Option } from '@/components/Dropdown'
 import Icon from '@/components/Icon'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
@@ -8,12 +8,8 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useApi } from '@/hooks/useApi'
-
-const keywords = [
-    "helloo",
-    "hey"
-]
-
+import Spinner from '@/components/Spinner'
+import { GetState } from "react-country-state-city";
 
 const sellerSchema = z.object({
     name: z
@@ -23,35 +19,56 @@ const sellerSchema = z.object({
         .string()
         .min(1, "Email is required")
         .email("Enter a valid email"),
-    dealerCode: z
+    dealer_code: z
         .string()
         .min(1, "Dealer Code is required"),
-    territoryState: z
+    territory_state: z
         .string()
         .min(1, "Territory - State is required"),
-    zipCode: z
+    zip_code: z
         .string()
         .min(1, "Zip Code is required"),
     keywords: z
         .array(z.string())
         .min(1, "Select at least one keyword"),
-    approvers: z
-        .array(z.string())
+    approver_ids: z
+        .array(z.number())
 })
 
 type SellerFormValues = z.infer<typeof sellerSchema>
 
 const AddSeller = () => {
-    const [filterdKeywords, setFilterdKeywords] = useState(keywords ?? [])
-    const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-    const { data, isLoading, error, refetch: login } = useApi<{ results: any[] }>({
-        url: "/sales-reps/invite/",
-        method: "post",
+    const [filterdKeywords, setFilterdKeywords] = useState<string[]>([])
+    const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+    const { state, search } = useLocation();
+    const [states, setStates] = useState<Option[]>([])
+
+    const editId = search.slice(search.lastIndexOf("=") + 1)
+
+
+
+    const { data, isLoading: approverLoading } = useApi<{ data: { approvers: any[] } }>({
+        url: `/approvers`,
+        auto: true,
+        method: "get",
+        transformResponse: (d) => d
+    });
+
+    const { data: keywordData, isLoading: isKeywordLoading } = useApi<{ data: { keywords: any[] } }>({
+        url: `/keywords`,
+        auto: true,
+        method: "get",
+        transformResponse: (d) => d
+    });
+
+
+    const { isLoading, refetch: callApi } = useApi<{ results: any[] }>({
+        url: editId ? `/sales-reps/${editId}` : "/sales-reps/invite/",
+        method: state?.id ? "patch" : "post",
         auto: false,
         transformResponse: (d) => d,
     });
     const navigate = useNavigate()
-    const { state } = useLocation();
 
     const {
         register,
@@ -65,11 +82,11 @@ const AddSeller = () => {
         defaultValues: {
             name: "",
             email: "",
-            dealerCode: "",
-            territoryState: "",
-            zipCode: "",
+            dealer_code: "",
+            territory_state: "",
+            zip_code: "",
             keywords: [],
-            approvers: [],
+            approver_ids: [],
         },
     })
 
@@ -77,15 +94,15 @@ const AddSeller = () => {
         const val = e.target.value.toLowerCase().trim();
 
         if (!val) {
-            setFilterdKeywords(keywords);
+            setFilterdKeywords(keywordData?.data?.keywords ?? []);
             return;
         }
 
-        const searched = keywords.filter((lable) =>
+        const searched = keywordData?.data?.keywords.filter((lable) =>
             lable?.toLowerCase().includes(val)
         );
 
-        setFilterdKeywords(searched);
+        setFilterdKeywords(searched ?? []);
     };
 
 
@@ -103,10 +120,10 @@ const AddSeller = () => {
         }
     }
 
-    const onSubmit = async (values:any) => {
+    const onSubmit = async (values: any) => {
         try {
-            console.log("API response", values);
-            await login({ body: values });
+            await callApi({ body: values });
+            navigate("/")
             reset();
         } catch (err) {
             console.error("submit error", err);
@@ -114,10 +131,37 @@ const AddSeller = () => {
     };
 
     useEffect(() => {
-        if (state) {
-            reset(state)
+        if (editId) {
+            if (state) {
+                setSelectedKeys(state?.keywords)
+                reset(state)
+            }
+            else {
+                navigate("/")
+            }
         }
-    }, [state])
+    }, [state?.id])
+
+    useEffect(() => {
+        if (keywordData?.data?.keywords) {
+            setFilterdKeywords(keywordData?.data?.keywords)
+        }
+    }, [keywordData?.data?.keywords])
+
+
+    const GetStates = async () => {
+        const res = await await GetState(233);
+        const data: any = res.map((el) => ({ lable: el.name, value: el.state_code}))
+        setStates(data)
+    }
+
+    useEffect(() => {
+        GetStates()
+    }, []);
+    if (approverLoading || isKeywordLoading) {
+        return <Spinner />
+    }
+    const approvers: Option[] = data?.data?.approvers?.map((el) => ({ lable: el.name, value: el.id })) ?? []
 
     return (
         <>
@@ -196,11 +240,11 @@ const AddSeller = () => {
                                             type="text"
                                             placeholder='e.g. DLR-2302'
                                             className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
-                                            {...register("dealerCode")}
+                                            {...register("dealer_code")}
                                         />
-                                        {errors.dealerCode && (
+                                        {errors.dealer_code && (
                                             <p className="text-xs text-red-500 mt-1">
-                                                {errors.dealerCode.message}
+                                                {errors.dealer_code.message}
                                             </p>
                                         )}
                                     </div>
@@ -210,13 +254,19 @@ const AddSeller = () => {
                                             <span className='text-[#EE2B93] ps-1'>*</span>
                                         </label>
                                         <Controller
-                                            name="territoryState"
+                                            name="territory_state"
                                             control={control}
                                             render={({ field }) => (
                                                 <Dropdown
-                                                    options={["pakistan", "india", "amerca", "UAE"]}
-                                                    value={field.value}
-                                                    onSelect={(val) => field.onChange(val as string)}
+                                                    options={states}
+                                                    value={
+                                                        states.find((s) => s.value === field.value)
+                                                    }
+                                                    onSelect={(item) => {
+                                                        if (!Array.isArray(item)) {
+                                                            field.onChange(item.value); 
+                                                        }
+                                                    }}
                                                     placeholder="Select territory"
                                                     classNames={{
                                                         trigger:
@@ -226,9 +276,10 @@ const AddSeller = () => {
                                                 />
                                             )}
                                         />
-                                        {errors.territoryState && (
+
+                                        {errors.territory_state && (
                                             <p className="text-xs text-red-500 mt-1">
-                                                {errors.territoryState.message}
+                                                {errors.territory_state.message}
                                             </p>
                                         )}
                                     </div>
@@ -242,11 +293,11 @@ const AddSeller = () => {
                                         type="text"
                                         placeholder='Enter comma-separated ZIP codes....'
                                         className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
-                                        {...register("zipCode")}
+                                        {...register("zip_code")}
                                     />
-                                    {errors.zipCode && (
+                                    {errors.zip_code && (
                                         <p className="text-xs text-red-500 mt-1">
-                                            {errors.zipCode.message}
+                                            {errors.zip_code.message}
                                         </p>
                                     )}
                                 </div>
@@ -301,12 +352,12 @@ const AddSeller = () => {
                                 </label>
 
                                 <Controller
-                                    name="approvers"
+                                    name="approver_ids"
                                     control={control}
                                     render={({ field }) => (
                                         <Dropdown
                                             multiple
-                                            options={["Design", "Development", "Marketing", "Sales"]}
+                                            options={approvers}
                                             value={field.value}
                                             onSelect={(val) => field.onChange(val as string[])}
                                             classNames={{
@@ -321,7 +372,9 @@ const AddSeller = () => {
 
                         </div>
                         <div className='lg-xl:flex items-center mt-10 gap-10'>
-                            <Button className='!rounded-full' type="submit">
+                            <Button className='!rounded-full' type="submit"
+                                isLoading={isLoading}
+                            >
                                 {state ? "Update" : "Submit intake"}
                             </Button>
                             <p className='flex lg-xl:whitespace-nowrap text-[#FEFFFFCC] text-base lg-xl:pt-0 pt-5'>
