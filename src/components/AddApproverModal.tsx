@@ -5,7 +5,6 @@ import Modal from "./Modal";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Spinner from "./Spinner";
 import { useApi } from "@/hooks/useApi";
 
 type AddApproverModalProps = {
@@ -36,9 +35,9 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   className,
 }) => {
 
-  const { data, isLoading, error, refetch: update } = useApi<{ results: any[] }>({
-    url: `/approvers/${isOpen?.id}`,
-    method: "post",
+  const { isLoading, refetch: update } = useApi<{ results: any[] }>({
+    url: `/approvers/${isOpen?.id ?? ''}`,
+    method: isOpen?.id ? "patch" : "post",
     auto: false,
     transformResponse: (d) => d,
   });
@@ -60,12 +59,10 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
 
   const onSubmit = async (values: ApproverFormValues) => {
     try {
-      console.log("API response", values);
-      onConfirm()
       await update({ body: values });
+      onConfirm()
       reset();
     } catch (err) {
-      console.error("submit error", err);
     }
   };
 
@@ -168,10 +165,10 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
               <div className="mt-6 flex items-center justify-end gap-3">
                 <Button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full min-h-[56px] !text-lg"
+                  className="w-full h-[56px] !text-lg"
+                  isLoading={isLoading}
                 >
-                  {isLoading ? <Spinner /> : isOpen?.email ? "Update Details" : "Save Details"}
+                  {isOpen?.email ? "Update Details" : "Save Details"}
                 </Button>
               </div>
             </form>

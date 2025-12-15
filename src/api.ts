@@ -1,19 +1,44 @@
-import axios from "axios";
+
+import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
 const axiosInstance = axios.create({
-     baseURL: import.meta.env.VITE_API_BASE_URL,
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     withCredentials: true,
     // headers: { "Content-Type": "application/json" },
 });
 
-axiosInstance.interceptors.request.use((config) => {
-    const token = Cookies.get("access_token");
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+// Let axios know Django's CSRF naming convention
+axiosInstance.defaults.xsrfCookieName = "csrftoken";
+axiosInstance.defaults.xsrfHeaderName = "X-CSRFToken";
+const CSRF_UNSAFE = new Set(["post", "put", "patch", "delete"]);
+axiosInstance.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+        // Bearer token
+        axiosInstance.interceptors.request.use((config) => {
+            const devToken = import.meta.env.DEV ? localStorage.getItem("token") : null;
+            if (devToken) config.headers.Authorization = `Bearer ${devToken}`;
+            return config;
+        });
+        const token = Cookies.get("access_token");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        // CSRF token for unsafe requests
+        if (CSRF_UNSAFE.has((config.method || "get").toLowerCase())) {
+            const csrf = Cookies.get("csrftoken");
+            if (csrf) {
+                config.headers["X-CSRFToken"] = csrf;
+            }
+        }
+        // config.headers["Accept-Language"] = lang;
+        return config;
+    },
+    (error: AxiosError) => {
+        return Promise.reject(error);
     }
-    return config;
-});
+);
 
 axiosInstance.interceptors.response.use(
     (response) => response,

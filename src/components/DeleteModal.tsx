@@ -3,18 +3,20 @@ import React, { type ReactNode } from "react";
 import clsx from "clsx";
 import { Button } from "./Button";
 import Modal from "./Modal";
+import { useApi } from "@/hooks/useApi";
 
 type DeleteModalProps = {
-  isOpen: boolean;
+  isOpen: any;
   title?: string;
   description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
-  confirmLoading?: boolean;
   disableOutsideClick?: boolean;
+  isLoading?: boolean,
   className?: string; // extra classes for modal content
+  url: string
 };
 
 const DeleteModal: React.FC<DeleteModalProps> = ({
@@ -25,12 +27,19 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
   cancelLabel = "Cancel",
   onConfirm,
   onClose,
-  confirmLoading = false,
   disableOutsideClick = false,
   className,
+  url
 }) => {
+  const { isLoading, refetch: callApi } = useApi<{ data: { approvers: any[] } }>({
+    url: `/${url}/${isOpen}`,
+    auto: false,
+    method: "delete",
+    transformResponse: (d) => d
+  });
   const handleConfirmClick = async () => {
-    await onConfirm();
+    await callApi();
+    onConfirm();
   };
 
   return (
@@ -38,8 +47,8 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       // avoid closing by outside click or ESC while loading
-      disableOutsideClick={disableOutsideClick || confirmLoading}
-      disableEsc={confirmLoading}
+      disableOutsideClick={disableOutsideClick || isLoading}
+      disableEsc={isLoading}
       ariaLabelledBy="delete-modal-title"
       ariaDescribedBy="delete-modal-description"
       contentClassName={clsx(
@@ -52,11 +61,11 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
       <button
         type="button"
         onClick={onClose}
-        disabled={confirmLoading}
+        disabled={isLoading}
         className={clsx(
           "absolute right-3 top-3 border opacity-65 rounded-full w-5 h-5 flex items-center justify-center hover:text-gray-200",
           "hover:bg-white/5 transition-colors duration-150",
-          confirmLoading && "cursor-not-allowed opacity-60"
+          isLoading && "cursor-not-allowed opacity-60"
         )}
         aria-label="Close"
       >
@@ -105,7 +114,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
         <Button
           type="button"
           onClick={onClose}
-          disabled={confirmLoading}
+          disabled={isLoading}
           bgClass="!bg-transparent"
           className="hover:opacity-80 duration-300 !py-2 !text-lg bg-[#0F1627] border border-[#FFFFFF1A]"
         >
@@ -115,10 +124,10 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
         <Button
           type="button"
           onClick={handleConfirmClick}
-          disabled={confirmLoading}
+          isLoading={isLoading}
           className="!py-2 !text-lg"
         >
-          {confirmLoading ? "Deleting..." : confirmLabel}
+          {confirmLabel}
         </Button>
       </div>
     </Modal>

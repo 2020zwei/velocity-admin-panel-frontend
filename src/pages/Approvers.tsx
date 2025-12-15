@@ -8,44 +8,41 @@ import TableActions from "@/components/TableActions";
 import { useApi } from "@/hooks/useApi";
 import { useState } from "react";
 
-const approvers = [
-    {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@approver.com",
-        "is_active": true,
-        "created_at": "2025-12-11T10:08:08.363892Z",
-        "updated_at": "2025-12-11T10:08:08.363908Z"
-    }
-]
 
 function Approvers() {
-    const [deleteItem, setDeleteItem] = useState<any>("");
+    const [deleteItem, setDeleteItem] = useState<any>(0);
     const [isApproverModal, setIsApproverModal] = useState<any>("");
 
-    const { isLoading, refetch: deleteData } = useApi<{ results: any[] }>({
-        url: `/approvers/${deleteItem?.id ?? ''}`,
-        auto: deleteItem?.id ? false : true,
-        method: deleteItem?.id ? "delete" : "get",
+    const { data: apvData, isLoading, refetch } = useApi<{ data: { approvers: any[] } }>({
+        url: `/approvers`,
+        auto: true,
+        method: "get",
         transformResponse: (d) => d
     });
 
-    const handleAction = (item: unknown, type: string) => {
+
+    const handleAction = (item: any, type: string) => {
         if (type === 'delete') {
-            setDeleteItem(item);
+            setDeleteItem(item?.id);
         }
         else if (type === "edit") {
             setIsApproverModal(item)
         }
     }
 
-    const deleteRecored = async () => {
+    const onDeleteConfirm = async () => {
         setDeleteItem("")
-        await deleteData()
+        refetch()
+    }
+    const onConfirm = async () => {
+        await refetch()
+        setIsApproverModal('')
     }
     if (isLoading) {
         return <Spinner />
     }
+
+    const approvers: any[] = apvData?.data?.approvers ?? []
     return (
         <>
             <div className="min-h-screen bg-black text-white flex">
@@ -58,66 +55,68 @@ function Approvers() {
                         </Button>
                     </div>
 
-                    <div
-                        className="w-full overflow-x-auto rounded-md bg-black-900/40"
-                        style={{ WebkitOverflowScrolling: "touch" }}
-                    >
-                        <table className="w-full text-sm border-separate border-spacing-y-2">
-                            {/* Gradient header */}
-                            <thead>
-                                <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
-                                    <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap rounded-l-md">
-                                        Seller Name
-                                    </th>
-                                    <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">
-                                        Email
-                                    </th>
-                                    <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            {/* Rows */}
-                            <tbody>
-                                {approvers.map((item) => (
-                                    <tr
-                                        key={item.id}
-                                        className="even:bg-black-800/60 text-white"
-                                    >
-                                        <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                                            {item.name}
-                                        </td>
-                                        <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                                            {item.email}
-                                        </td>
-                                        <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                                            <div className="flex items-center justify-end gap-4">
-                                                <TableActions item={item} onClick={handleAction} />
-                                            </div>
-                                        </td>
+                    {(!approvers?.length) ? <div className="text-center text-lg">Approvers not found</div> : <>
+                        <div
+                            className="w-full overflow-x-auto rounded-md bg-black-900/40"
+                            style={{ WebkitOverflowScrolling: "touch" }}
+                        >
+                            <table className="w-full text-sm border-separate border-spacing-y-2">
+                                {/* Gradient header */}
+                                <thead>
+                                    <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
+                                        <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap rounded-l-md">
+                                            Seller Name
+                                        </th>
+                                        <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">
+                                            Email
+                                        </th>
+                                        <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">
+                                            Actions
+                                        </th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <Pagination
-                        totalPages={20}
-                        baseUrl="/approvers"
-                    />
+                                </thead>
 
+                                {/* Rows */}
+                                <tbody>
+                                    {approvers.map((item) => (
+                                        <tr
+                                            key={item.id}
+                                            className="even:bg-black-800/60 text-white"
+                                        >
+                                            <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                                                {item.name}
+                                            </td>
+                                            <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                                                {item.email}
+                                            </td>
+                                            <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                                                <div className="flex items-center justify-end gap-4">
+                                                    <TableActions item={item} onClick={handleAction} />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <Pagination
+                            totalPages={20}
+                            baseUrl="/approvers"
+                        />
+                    </>}
 
                 </section>
             </div>
             <DeleteModal
+                url="approvers"
                 isOpen={deleteItem}
                 onClose={() => setDeleteItem(false)}
-                onConfirm={deleteRecored}
+                onConfirm={onDeleteConfirm}
             />
             <AddApproverModal
                 isOpen={isApproverModal}
                 onClose={() => { setIsApproverModal("") }}
-                onConfirm={() => setIsApproverModal("")}
+                onConfirm={onConfirm}
             />
 
         </>
