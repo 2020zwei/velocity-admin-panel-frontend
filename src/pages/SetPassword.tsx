@@ -87,7 +87,7 @@ const SetPassword: React.FC = () => {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                     {/* Password */}
                     <div className="flex flex-col gap-2">
-                        <label className="font-medium">
+                        <label className="font-medium text-base text-start">
                             Password <span className="text-[#EE2B93]">*</span>
                         </label>
 
@@ -118,7 +118,7 @@ const SetPassword: React.FC = () => {
 
                     {/* Confirm Password */}
                     <div className="flex flex-col gap-2">
-                        <label className="font-medium">
+                        <label className="font-medium text-base text-start">
                             Confirm Password <span className="text-[#EE2B93]">*</span>
                         </label>
 

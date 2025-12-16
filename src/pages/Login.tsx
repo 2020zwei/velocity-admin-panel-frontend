@@ -79,8 +79,8 @@ const Login = () => {
                     )}
                 </div>
 
-                <div className="flex flex-col gap-2">
-                    <label className="font-medium">
+                <div className="flex flex-col gap-2 w-full text-start mt-5">
+                    <label className="font-medium text-base text-start w-full">
                         Password <span className="text-[#EE2B93]">*</span>
                     </label>
 
