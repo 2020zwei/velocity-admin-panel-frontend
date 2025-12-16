@@ -5,6 +5,8 @@ import { useApi } from "@/hooks/useApi";
 import { Button } from "@/components/Button";
 import Spinner from "@/components/Spinner";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import Icon from "@/components/Icon";
 
 const approverSchema = z.object({
     email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
@@ -20,6 +22,7 @@ const approverSchema = z.object({
 type ApproverFormValues = z.infer<typeof approverSchema>;
 
 const Login = () => {
+    const [showPassword, setShowPassword] = useState(false);
     const { data, isLoading, error, refetch: login } = useApi<{ results: any[] }>({
         url: "/signin/",
         method: "post",
@@ -76,19 +79,31 @@ const Login = () => {
                     )}
                 </div>
 
-                <div className="flex flex-col gap-2 w-full text-start mt-5">
-                    <label className="font-medium text-base">
-                        Password
-                        <span className="text-[#EE2B93] ps-1">*</span>
+                <div className="flex flex-col gap-2">
+                    <label className="font-medium">
+                        Password <span className="text-[#EE2B93]">*</span>
                     </label>
-                    <input
-                        type="password"
-                        placeholder="Enter password"
-                        className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
-                        {...register("password")}
-                    />
+
+                    <div className="relative">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter password"
+                            className="bg-[#09090E] h-14 w-full rounded-xl px-3 pr-12 border border-[#FFFFFF1A]"
+                            {...register("password")}
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((p) => !p)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                            {showPassword ? <Icon name="offEye" /> : <Icon name="onEye" />}
+                        </button>
+                    </div>
+
                     {errors.password && (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="text-xs text-red-500">
                             {errors.password.message}
                         </p>
                     )}
