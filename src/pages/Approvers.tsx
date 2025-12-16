@@ -86,7 +86,7 @@ function Approvers() {
                                                 key={item.id}
                                                 className="even:bg-black-800/60 text-white"
                                             >
-                                                <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                                                <td className="px-4 sm:px-6 py-3 whitespace-nowrap capitalize">
                                                     {item.name}
                                                 </td>
                                                 <td className="px-4 sm:px-6 py-3 whitespace-nowrap">

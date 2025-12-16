@@ -65,11 +65,11 @@ function SellerDashboard() {
                 <tbody>
                   {sales_reps.map((item) => (
                     <tr key={item.id} className="even:bg-black-800/60 text-white">
-                      <td className="px-4 sm:px-6 py-3 whitespace-nowrap">{item.name}</td>
+                      <td className="px-4 sm:px-6 py-3 whitespace-nowrap capitalize">{item.name}</td>
                       <td className="px-4 sm:px-6 py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
                         {item.email}
                       </td>
-                      <td className="px-4 sm:px-6 py-3 whitespace-nowrap">{item.territory_state}</td>
+                      <td className="px-4 sm:px-6 py-3 whitespace-nowrap capitalize">{item.territory_state}</td>
                       <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
                         <div className="flex items-center justify-end gap-4">
                           <TableActions item={item} onClick={handleAction} />
