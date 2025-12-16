@@ -147,7 +147,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
                   Email
                   <span className="text-[#EE2B93] ps-1">*</span>
                 </label>
-                {isOpen ? <div  className="bg-[#09090E] flex items-center opacity-70 cursor-not-allowed h-14 rounded-xl px-3 border border-[#FFFFFF1A]">{isOpen?.email}</div> :
+                {isOpen?.email ? <div  className="bg-[#09090E] flex items-center opacity-70 cursor-not-allowed h-14 rounded-xl px-3 border border-[#FFFFFF1A]">{isOpen?.email}</div> :
                   <>
                     <input
                       type="email"

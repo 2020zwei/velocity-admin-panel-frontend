@@ -166,6 +166,8 @@ const AddSeller = () => {
     }
     const approvers: Option[] = data?.data?.approvers?.map((el) => ({ lable: el.name, value: el.id })) ?? []
 
+    console.log(states)
+
     return (
         <>
             <div className='flex flex-col gap-4 md:flex-row md:items-start md:justify-between'>
@@ -221,7 +223,7 @@ const AddSeller = () => {
                                         Email
                                         <span className='text-[#EE2B93] ps-1'>*</span>
                                     </label>
-                                    {(editId || states) ? <div className="bg-[#09090E] flex items-center opacity-70 cursor-not-allowed h-14 rounded-xl px-3 border border-[#FFFFFF1A]">{watch("email")}</div> :
+                                    {(editId) ? <div className="bg-[#09090E] flex items-center opacity-70 cursor-not-allowed h-14 rounded-xl px-3 border border-[#FFFFFF1A]">{watch("email")}</div> :
                                         <>
                                             <input
                                                 type="email"
