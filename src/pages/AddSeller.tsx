@@ -45,11 +45,9 @@ const AddSeller = () => {
 
     const editId = search.slice(search.lastIndexOf("=") + 1)
 
-    console.log(states)
 
 
-
-    const { data, isLoading: approverLoading } = useApi<{ data: { approvers: any[] } }>({
+    const { data, isLoading: approverLoading } = useApi<{ results: { data: { approvers: any[] } } }>({
         url: `/approvers`,
         auto: true,
         method: "get",
@@ -123,6 +121,10 @@ const AddSeller = () => {
         }
     }
 
+    const hasMore=()=>{
+        console.log("sdffdssd")
+    }
+
     const onSubmit = async (values: any) => {
         try {
             await callApi({ body: values });
@@ -166,7 +168,6 @@ const AddSeller = () => {
     }
     const approvers: Option[] = data?.results?.data?.approvers?.map((el) => ({ lable: el.name, value: el.id })) ?? []
 
-    console.log(states)
 
     return (
         <>
@@ -267,6 +268,7 @@ const AddSeller = () => {
                                             render={({ field }) => (
                                                 <Dropdown
                                                     options={states}
+                                                     onReachBottom={hasMore}
                                                     value={
                                                         states.find((s) => s.value === field.value)
                                                     }
@@ -372,6 +374,7 @@ const AddSeller = () => {
                                                 trigger: "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
                                                 selectedOption: "bg-blue-gradient"
                                             }}
+                                            
                                         />
                                     )}
                                 />
