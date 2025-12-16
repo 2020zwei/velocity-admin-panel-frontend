@@ -7,8 +7,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useApi } from "@/hooks/useApi";
 
-type AddApproverModalProps = {
-  isOpen: any;
+interface AddApproverModalProps {
+  isOpen: unknown;
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
   confirmLoading?: boolean;
@@ -35,7 +35,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   className,
 }) => {
 
-  const { isLoading, refetch: update } = useApi<{ results: any[] }>({
+  const { isLoading, refetch: update } = useApi<{ results: unknown[] }>({
     url: `/approvers/${isOpen?.id ?? ''}`,
     method: isOpen?.id ? "patch" : "post",
     auto: false,
@@ -58,12 +58,9 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   });
 
   const onSubmit = async (values: ApproverFormValues) => {
-    try {
-      await update({ body: values });
-      onConfirm()
-      reset();
-    } catch (err) {
-    }
+    await update({ body: values });
+    onConfirm()
+    reset();
   };
 
 
@@ -79,7 +76,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
     if (data?.email) {
       reset(data)
     }
-  }, [isOpen])
+  }, [isOpen, reset])
 
 
   return (
@@ -150,17 +147,20 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
                   Email
                   <span className="text-[#EE2B93] ps-1">*</span>
                 </label>
-                <input
-                  type="email"
-                  placeholder="e.g. alex@salespartner.com"
-                  className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
-                  {...register("email")}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-500">
-                    {errors.email.message}
-                  </p>
-                )}
+                {isOpen ? <div  className="bg-[#09090E] flex items-center opacity-70 cursor-not-allowed h-14 rounded-xl px-3 border border-[#FFFFFF1A]">{isOpen?.email}</div> :
+                  <>
+                    <input
+                      type="email"
+                      placeholder="e.g. alex@salespartner.com"
+                      className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
+                      {...register("email")}
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </>}
               </div>
               <div className="mt-6 flex items-center justify-end gap-3">
                 <Button

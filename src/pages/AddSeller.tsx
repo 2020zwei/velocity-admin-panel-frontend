@@ -45,6 +45,8 @@ const AddSeller = () => {
 
     const editId = search.slice(search.lastIndexOf("=") + 1)
 
+    console.log(states)
+
 
 
     const { data, isLoading: approverLoading } = useApi<{ data: { approvers: any[] } }>({
@@ -76,6 +78,7 @@ const AddSeller = () => {
         setValue,
         control,
         reset,
+        watch,
         formState: { errors },
     } = useForm<SellerFormValues>({
         resolver: zodResolver(sellerSchema),
@@ -151,7 +154,7 @@ const AddSeller = () => {
 
     const GetStates = async () => {
         const res = await await GetState(233);
-        const data: any = res.map((el) => ({ lable: el.name, value: el.state_code}))
+        const data: any = res.map((el) => ({ lable: el.name, value: el.state_code }))
         setStates(data)
     }
 
@@ -218,17 +221,20 @@ const AddSeller = () => {
                                         Email
                                         <span className='text-[#EE2B93] ps-1'>*</span>
                                     </label>
-                                    <input
-                                        type="email"
-                                        placeholder='e.g. alex@salespartner.com'
-                                        className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
-                                        {...register("email")}
-                                    />
-                                    {errors.email && (
-                                        <p className="text-xs text-red-500 mt-1">
-                                            {errors.email.message}
-                                        </p>
-                                    )}
+                                    {(editId || states) ? <div className="bg-[#09090E] flex items-center opacity-70 cursor-not-allowed h-14 rounded-xl px-3 border border-[#FFFFFF1A]">{watch("email")}</div> :
+                                        <>
+                                            <input
+                                                type="email"
+                                                placeholder='e.g. alex@salespartner.com'
+                                                className='bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]'
+                                                {...register("email")}
+                                            />
+                                            {errors.email && (
+                                                <p className="text-xs text-red-500 mt-1">
+                                                    {errors.email.message}
+                                                </p>
+                                            )}
+                                        </>}
                                 </div>
                                 <div className='sm:flex items-center justify-between gap-3'>
                                     <div className='flex flex-col gap-2 flex-1'>
@@ -264,7 +270,7 @@ const AddSeller = () => {
                                                     }
                                                     onSelect={(item) => {
                                                         if (!Array.isArray(item)) {
-                                                            field.onChange(item.value); 
+                                                            field.onChange(item.value);
                                                         }
                                                     }}
                                                     placeholder="Select territory"
