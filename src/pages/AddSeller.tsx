@@ -164,7 +164,7 @@ const AddSeller = () => {
     if (approverLoading || isKeywordLoading) {
         return <Spinner />
     }
-    const approvers: Option[] = data?.data?.approvers?.map((el) => ({ lable: el.name, value: el.id })) ?? []
+    const approvers: Option[] = data?.results?.data?.approvers?.map((el) => ({ lable: el.name, value: el.id })) ?? []
 
     console.log(states)
 
