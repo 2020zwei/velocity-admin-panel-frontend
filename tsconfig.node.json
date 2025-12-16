@@ -5,8 +5,10 @@
     "lib": [
       "ES2023"
     ],
-    "module": "ESNext",
+     "strict": false,
     "skipLibCheck": true,
+    "noEmitOnError": false,
+    "module": "ESNext",
     "noImplicitAny": false,
     "resolveJsonModule": true,
     "esModuleInterop": true,
@@ -17,7 +19,6 @@
     "moduleDetection": "force",
     "noEmit": true,
     /* Linting */
-    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

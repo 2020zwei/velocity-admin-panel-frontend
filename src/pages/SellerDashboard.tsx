@@ -5,15 +5,16 @@ import Spinner from "@/components/Spinner";
 import TableActions from "@/components/TableActions";
 import { useApi } from "@/hooks/useApi";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 
 function SellerDashboard() {
-
+  const { search } = useLocation()
   const [deleteItem, setDeleteItem] = useState<any>("");
   const navigate = useNavigate();
-  const { data, isLoading, error, refetch: callApi } = useApi<{ data: { sales_reps: any[] } }>({
-    url: `/sales-reps`,
+  const page = search.slice(search.lastIndexOf("=") + 1)
+  const { data, isLoading, refetch: callApi } = useApi({
+    url: `/sales-reps?page_number=${page ? page : 1}&&page_size=20`,
     auto: true,
     method: "get",
     transformResponse: (d) => d
@@ -34,7 +35,8 @@ function SellerDashboard() {
   if (isLoading) {
     return <Spinner />
   }
-  const sales_reps: any[] = data?.data?.sales_reps ?? []
+  const sales_reps: any[] = data?.results?.data?.sales_reps ?? []
+  const totalPages = Math.ceil(data?.count / 20)
   return (
     <>
       <div className="min-h-screen bg-black text-white flex">
@@ -78,11 +80,11 @@ function SellerDashboard() {
                 </tbody>
               </table>
             </div>
-
-
-            <div className="mt-4">
-              <Pagination totalPages={20} baseUrl="/" />
-            </div>
+            {totalPages > 1 &&
+              <div className="mt-4">
+                <Pagination totalPages={totalPages} baseUrl="/" />
+              </div>
+            }
           </>
           }
         </section>
