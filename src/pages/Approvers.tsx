@@ -7,14 +7,16 @@ import Spinner from "@/components/Spinner";
 import TableActions from "@/components/TableActions";
 import { useApi } from "@/hooks/useApi";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 
 
 function Approvers() {
+    const { search } = useLocation()
     const [deleteItem, setDeleteItem] = useState<any>(0);
     const [isApproverModal, setIsApproverModal] = useState<any>("");
-
-    const { data: apvData, isLoading, refetch } = useApi<{ data: { approvers: any[] } }>({
-        url: `/approvers`,
+    const page = search.slice(search.lastIndexOf("=") + 1)
+    const { data: apvData, isLoading, refetch } = useApi({
+        url: `/approvers?page_number=${page ? page : 1}&&page_size=20`,
         auto: true,
         method: "get",
         transformResponse: (d) => d
@@ -41,8 +43,8 @@ function Approvers() {
     if (isLoading) {
         return <Spinner />
     }
-
-    const approvers: any[] = apvData?.data?.approvers ?? []
+    const approvers: any[] = apvData?.results?.data?.approvers ?? []
+    const totalPages = Math.ceil(apvData?.count / 20)
     return (
         <>
             <div className="min-h-screen bg-black text-white flex">
@@ -55,55 +57,57 @@ function Approvers() {
                         </Button>
                     </div>
 
-                    {(!approvers?.length) ? <div className="text-center text-lg">Approvers not found</div> : <>
-                        <div
-                            className="w-full overflow-x-auto rounded-md bg-black-900/40"
-                            style={{ WebkitOverflowScrolling: "touch" }}
-                        >
-                            <table className="w-full text-sm border-separate border-spacing-y-2">
-                                {/* Gradient header */}
-                                <thead>
-                                    <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
-                                        <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap rounded-l-md">
-                                            Seller Name
-                                        </th>
-                                        <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">
-                                            Email
-                                        </th>
-                                        <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                {/* Rows */}
-                                <tbody>
-                                    {approvers.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            className="even:bg-black-800/60 text-white"
-                                        >
-                                            <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                                                {item.name}
-                                            </td>
-                                            <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                                                {item.email}
-                                            </td>
-                                            <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
-                                                <div className="flex items-center justify-end gap-4">
-                                                    <TableActions item={item} onClick={handleAction} />
-                                                </div>
-                                            </td>
+                    {!approvers?.length ? <div className="text-center text-lg">Approvers not found</div> :
+                        <>
+                            <div
+                                className="w-full overflow-x-auto rounded-md bg-black-900/40"
+                                style={{ WebkitOverflowScrolling: "touch" }}
+                            >
+                                <table className="w-full text-sm border-separate border-spacing-y-2">
+                                    {/* Gradient header */}
+                                    <thead>
+                                        <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
+                                            <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap rounded-l-md">
+                                                Seller Name
+                                            </th>
+                                            <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">
+                                                Email
+                                            </th>
+                                            <th className="px-4 sm:px-6 py-3 text-right rounded-r-md pr-4 sm:pr-6 whitespace-nowrap">
+                                                Actions
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <Pagination
-                            totalPages={20}
-                            baseUrl="/approvers"
-                        />
-                    </>}
+                                    </thead>
+
+                                    {/* Rows */}
+                                    <tbody>
+                                        {approvers.map((item) => (
+                                            <tr
+                                                key={item.id}
+                                                className="even:bg-black-800/60 text-white"
+                                            >
+                                                <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                                                    {item.name}
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                                                    {item.email}
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                                                    <div className="flex items-center justify-end gap-4">
+                                                        <TableActions item={item} onClick={handleAction} />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {totalPages > 1 &&
+                                <Pagination
+                                    totalPages={totalPages}
+                                    baseUrl="/approvers"
+                                />}
+                        </>}
 
                 </section>
             </div>
