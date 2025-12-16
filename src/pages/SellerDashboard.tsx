@@ -14,7 +14,7 @@ function SellerDashboard() {
   const navigate = useNavigate();
   const page = search.slice(search.lastIndexOf("=") + 1)
   const { data, isLoading, refetch: callApi } = useApi({
-    url: `/sales-reps?page_number=${page ? page : 1}&&page_size=20`,
+    url: `/sales-reps?page=${page ? page : 1}&&page_size=20`,
     auto: true,
     method: "get",
     transformResponse: (d) => d

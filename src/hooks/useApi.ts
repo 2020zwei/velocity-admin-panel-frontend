@@ -263,7 +263,7 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
         setError(err);
         return Promise.reject(err);
       } finally {
-        setIsLoading(false);
+        setTimeout(()=>{setIsLoading(false);},1000)
         abortRef.current = null;
       }
     },
