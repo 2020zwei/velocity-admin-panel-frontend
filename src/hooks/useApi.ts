@@ -122,7 +122,7 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
                 sameSite: "strict",
               });
             }
-            toast.success(res?.data?.message);
+            toast.success(res?.data?.message,{toastId:"succes-toast"});
           }
 
           setData(payload);
