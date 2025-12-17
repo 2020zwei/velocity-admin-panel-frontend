@@ -23,7 +23,7 @@ const Header = ({ isSidebarOpen,onMenuClick }: HeaderProps) => {
             onClick={onMenuClick} 
           ><Icon name={isSidebarOpen?'times':'bars'}/></button>
         </div>}
-        <div className={clsx("flex items-center gap-2 h-11 px-3 rounded-md w-[300px] md:border border-[#FFFFFF1A] md:relative absolute",isSearchOpen?"!border bg-black-800 w-[95%]":"")}>
+        {/* <div className={clsx("flex items-center gap-2 h-11 px-3 rounded-md w-[300px] md:border border-[#FFFFFF1A] md:relative absolute",isSearchOpen?"!border bg-black-800 w-[95%]":"")}>
           <span className={clsx("opacity-60 md:block hidden",isSearchOpen?"!block":"")}><Icon name='search' /></span>
           <input
             type="text"
@@ -31,7 +31,7 @@ const Header = ({ isSidebarOpen,onMenuClick }: HeaderProps) => {
             className={clsx("bg-transparent outline-none flex-1 text-white md:block hidden",isSearchOpen?"!block":"")}
           />
            {isSearchOpen&& <span className="opacity-60 md:hidden block" onClick={()=>setIsSearchOpen(false)}><Icon name='times' /></span>}
-        </div>
+        </div> */}
        {!isSearchOpen&& <span className="opacity-60 md:hidden block" onClick={()=>setIsSearchOpen(true)}><Icon name='search' /></span>}
       </div>
 

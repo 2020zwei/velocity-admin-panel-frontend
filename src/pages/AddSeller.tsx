@@ -10,6 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useApi } from '@/hooks/useApi'
 import Spinner from '@/components/Spinner'
 import { GetState } from "react-country-state-city";
+import { useDebounce } from '@/helper/debounce'
+import { optionGenerator } from '@/helper/optionGenerator'
 
 const sellerSchema = z.object({
     name: z
@@ -42,23 +44,20 @@ const AddSeller = () => {
     const [selectedKeys, setSelectedKeys] = useState<string[]>([])
     const { state, search } = useLocation();
     const [states, setStates] = useState<Option[]>([])
-
+    const [approverOptions, setApproverOptions] = useState<Option[]>([])
     const editId = search.slice(search.lastIndexOf("=") + 1)
 
-
-
-    const { data, isLoading: approverLoading } = useApi<{ results: { data: { approvers: any[] } } }>({
+    const { data: approverData, isLoading: approverLoading, refetch, isRefetching } = useApi<{ results: { data: { approvers: any[] } } }>({
         url: `/approvers`,
         auto: true,
-        method: "get",
-        transformResponse: (d) => d
+        transformResponse: (d) => {
+            setApproverOptions(optionGenerator('name', "id", d?.results?.data?.approvers))
+            return d
+        }
     });
 
     const { data: keywordData, isLoading: isKeywordLoading } = useApi<{ data: { keywords: any[] } }>({
-        url: `/keywords`,
-        auto: true,
-        method: "get",
-        transformResponse: (d) => d
+        url: `/keywords`
     });
 
 
@@ -68,6 +67,10 @@ const AddSeller = () => {
         auto: false,
         transformResponse: (d) => d,
     });
+
+    const debouncedSearch = useDebounce((v: string) => {
+        refetch({ url: `/approvers?search=${v}` })
+    }, 500);
     const navigate = useNavigate()
 
     const {
@@ -121,10 +124,6 @@ const AddSeller = () => {
         }
     }
 
-    const hasMore=()=>{
-        console.log("sdffdssd")
-    }
-
     const onSubmit = async (values: any) => {
         try {
             await callApi({ body: values });
@@ -156,18 +155,31 @@ const AddSeller = () => {
 
     const GetStates = async () => {
         const res = await await GetState(233);
-        const data: any = res.map((el) => ({ lable: el.name, value: el.state_code }))
-        setStates(data)
+        setStates(optionGenerator('name', "state_code", res))
+    }
+
+    const loadPage = async (page: number) => { }
+
+    const handleChange = async (search: string) => {
+        const filtered = approverOptions.filter((el: Option) => el.label.toLowerCase().trim().includes(search.toLowerCase().trim()))
+        if (!search) {
+            setApproverOptions(optionGenerator('name', "id", approverData?.results?.data?.approvers))
+        }
+        if (filtered.length && search) {
+            setApproverOptions(filtered)
+        }
+        if (!filtered.length && search) {
+            debouncedSearch(search)
+        }
     }
 
     useEffect(() => {
         GetStates()
     }, []);
-    if (approverLoading || isKeywordLoading) {
+
+    if ((approverLoading || isKeywordLoading) && !isRefetching) {
         return <Spinner />
     }
-    const approvers: Option[] = data?.results?.data?.approvers?.map((el) => ({ lable: el.name, value: el.id })) ?? []
-
 
     return (
         <>
@@ -268,7 +280,7 @@ const AddSeller = () => {
                                             render={({ field }) => (
                                                 <Dropdown
                                                     options={states}
-                                                     onReachBottom={hasMore}
+                                                    isSearch={true}
                                                     value={
                                                         states.find((s) => s.value === field.value)
                                                     }
@@ -338,17 +350,17 @@ const AddSeller = () => {
                                     )}
                                 </div>
                                 <div>
-                                    {filterdKeywords.length ? filterdKeywords.map((lable) => (
+                                    {filterdKeywords.length ? filterdKeywords.map((label) => (
                                         <button
-                                            onClick={() => onSelect(lable)}
+                                            onClick={() => onSelect(label)}
                                             type='button'
-                                            key={lable}
+                                            key={label}
                                             className={clsx(
                                                 'my-2 mx-1 rounded-full px-3 py-1 border border-[#EE2B93] text-[#FFFFFF80] hover:bg-[#EE2B934D] hover:text-white hover:border-[#EE2B934D] duration-300',
-                                                selectedKeys.includes(lable) ? "bg-[#EE2B934D] text-white" : ""
+                                                selectedKeys.includes(label) ? "bg-[#EE2B934D] text-white" : ""
                                             )}
                                         >
-                                            {lable}
+                                            {label}
                                         </button>
                                     )) : <div className='text-center font-semibold'>Keywords not found</div>}
 
@@ -361,20 +373,28 @@ const AddSeller = () => {
                                     Add Approvers
                                 </label>
 
+
+
                                 <Controller
                                     name="approver_ids"
                                     control={control}
                                     render={({ field }) => (
                                         <Dropdown
+                                            isFetchingMore={approverLoading || isRefetching}
+                                            totalPages={1}
+                                            onReachBottom={loadPage}
+                                            isSearch={true}
+                                            onChange={handleChange}
                                             multiple
-                                            options={approvers}
+                                            options={approverOptions}
                                             value={field.value}
                                             onSelect={(val) => field.onChange(val as string[])}
+                                            placeholder="Select territory"
                                             classNames={{
-                                                trigger: "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
-                                                selectedOption: "bg-blue-gradient"
+                                                trigger:
+                                                    "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
+                                                selectedOption: "bg-blue-gradient",
                                             }}
-                                            
                                         />
                                     )}
                                 />
