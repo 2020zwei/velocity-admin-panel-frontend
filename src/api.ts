@@ -1,14 +1,10 @@
 
-import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
-
 const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
     withCredentials: true,
-    // headers: { "Content-Type": "application/json" },
 });
-
-// Let axios know Django's CSRF naming convention
 axiosInstance.defaults.xsrfCookieName = "csrftoken";
 axiosInstance.defaults.xsrfHeaderName = "X-CSRFToken";
 const CSRF_UNSAFE = new Set(["post", "put", "patch", "delete"]);
