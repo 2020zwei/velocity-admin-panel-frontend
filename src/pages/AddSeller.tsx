@@ -51,7 +51,7 @@ const AddSeller = () => {
         url: `/approvers`,
         auto: true,
         transformResponse: (d) => {
-            setApproverOptions(optionGenerator('name', "id", d?.results?.data?.approvers))
+           !isRefetching&& setApproverOptions(optionGenerator('name', "id", d?.results?.data?.approvers))
             return d
         }
     });
@@ -158,7 +158,12 @@ const AddSeller = () => {
         setStates(optionGenerator('name', "state_code", res))
     }
 
-    const loadPage = async (page: number) => { }
+    const loadPage = async (page: number) => { 
+         await refetch({ url: `/approvers?page=${page}` }).then(res=>{
+            const newOpt=optionGenerator('name', "id", approverData?.results?.data?.approvers)
+            setApproverOptions((prev)=>[...prev,...newOpt])
+         })
+    }
 
     const handleChange = async (search: string) => {
         const filtered = approverOptions.filter((el: Option) => el.label.toLowerCase().trim().includes(search.toLowerCase().trim()))
@@ -381,10 +386,11 @@ const AddSeller = () => {
                                     render={({ field }) => (
                                         <Dropdown
                                             isFetchingMore={approverLoading || isRefetching}
-                                            totalPages={1}
+                                            totalPages={Math.ceil(approverData?.count/10)}
                                             onReachBottom={loadPage}
                                             isSearch={true}
                                             onChange={handleChange}
+                                            showSelectedList
                                             multiple
                                             options={approverOptions}
                                             value={field.value}
