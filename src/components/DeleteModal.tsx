@@ -31,7 +31,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
   className,
   url
 }) => {
-  const { isLoading, refetch: callApi } = useApi<{ data: { approvers: any[] } }>({
+  const { isLoading, refetch: callApi,isRefetching } = useApi<{ data: { approvers: any[] } }>({
     url: `/${url}/${isOpen}`,
     auto: false,
     method: "delete",
@@ -124,7 +124,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
         <Button
           type="button"
           onClick={handleConfirmClick}
-          isLoading={isLoading}
+          isLoading={isLoading||isRefetching}
           className="!py-2 !text-lg"
         >
           {confirmLabel}

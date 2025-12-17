@@ -15,7 +15,7 @@ function Approvers() {
     const [deleteItem, setDeleteItem] = useState<any>(0);
     const [isApproverModal, setIsApproverModal] = useState<any>("");
     const page = search.slice(search.lastIndexOf("=") + 1)
-    const { data: apvData, isLoading, refetch } = useApi({
+    const { data: apvData, isLoading, refetch, isRefetching } = useApi({
         url: `/approvers?page=${page ? page : 1}&&page_size=20`,
         auto: true,
         method: "get",
@@ -41,7 +41,7 @@ function Approvers() {
         setIsApproverModal('')
     }
     if (isLoading) {
-        return <Spinner />
+        return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
     }
     const approvers: any[] = apvData?.results?.data?.approvers ?? []
     const totalPages = Math.ceil(apvData?.count / 20)
@@ -122,6 +122,7 @@ function Approvers() {
                 onClose={() => { setIsApproverModal("") }}
                 onConfirm={onConfirm}
             />
+            {!isLoading && isRefetching && <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>}
 
         </>
     );
