@@ -34,6 +34,7 @@ interface DropdownProps {
     onChange?: (value: string) => void;
     bottomOffset?: number;
     isFetchingMore?: boolean;
+    showSelectedList?: boolean
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -50,6 +51,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     isSearch = false,
     totalPages = 1,
     isFetchingMore = false,
+    showSelectedList = false
 }) => {
 
     const [items, setItems] = useState<Option[]>([]);
@@ -69,13 +71,6 @@ const Dropdown: React.FC<DropdownProps> = ({
     const ignoreNextScrollRef = useRef(false);
     const prevLenRef = useRef(options.length);
     const oldOptions = useRef<Option[]>([])
-
-    // add this ref
-    const inFlightRef = useRef<{
-        key: string;
-        promise: Promise<any>;
-        controller: AbortController;
-    } | null>(null);
 
 
     useEffect(() => {
@@ -153,7 +148,6 @@ const Dropdown: React.FC<DropdownProps> = ({
 
         if (multiple && Array.isArray(currentValue)) {
             if (currentValue.length === 0) return placeholder;
-
             return currentValue
                 .map((v) => findOption(v)?.label)
                 .filter(Boolean)
@@ -257,7 +251,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     classNames.trigger
                 )}
             >
-                <div className="text-left flex-1">
+                <div className="text-left flex-1 max-w-[95%] overflow-x-auto dark-scrollbar">
                     <div
                         className={clsx(
                             "leading-tight whitespace-nowrap text-base",
@@ -267,7 +261,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 : "text-white"
                         )}
                     >
-                        {getDisplayLabel()}
+                        {showSelectedList ? placeholder : getDisplayLabel()}
                     </div>
                 </div>
 
@@ -281,6 +275,18 @@ const Dropdown: React.FC<DropdownProps> = ({
                 </span>
                 {isFetchingMore && <span><Spinner size={20} /></span>}
             </button>
+
+            {multiple && showSelectedList && Array.isArray(currentValue) && currentValue.length ?
+                <ul className="flex flex-wrap gap-x-2 gap-y-6 mt-6">
+                    {
+                        options.map((opt, index) => {
+                            return currentValue.includes(opt.value) ?
+                                <li key={index} className="w-max border border-[#1f2233] rounded-full text-xs py-1 px-2 relative">{opt.label}<button  onClick={() => handleOptionClick(opt.value)} type="button" className="absolute -top-3 -end-1 text-red-500 border-[#EE2B93] border rounded-full w-4 h-4 flex items-center justify-center">x</button></li>
+                                : null
+                        })}
+                </ul> : null
+            }
+
             {isMounted && (
                 <div
                     onTransitionEnd={(e) => {
@@ -315,16 +321,16 @@ const Dropdown: React.FC<DropdownProps> = ({
                         onScroll={handleScroll}
                         className="max-h-[200px] overflow-auto dark-scrollbar py-2 text-sm"
                     >
-                        {items.map((opt) => {
+                        {items.map((opt,index) => {
                             const selected = isSelected(opt.value);
 
                             return (
                                 <button
-                                    key={String(opt.value)}
+                                    key={"list-"+String(index)}
                                     type="button"
                                     onClick={() => handleOptionClick(opt.value)}
                                     className={clsx(
-                                        "w-full flex items-center rounded-md py-3 hover:bg-blue-gradient duration-300 justify-between px-3 text-white transition text-left",
+                                        "w-full flex items-center rounded-md py-2 mb-1 hover:bg-blue-gradient duration-300 justify-between px-3 text-white transition text-left",
                                         selected && showSelected ? classNames.selectedOption : "",
                                         classNames.option
                                     )}
