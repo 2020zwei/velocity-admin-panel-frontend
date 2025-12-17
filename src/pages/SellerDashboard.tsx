@@ -13,7 +13,7 @@ function SellerDashboard() {
   const [deleteItem, setDeleteItem] = useState<any>("");
   const navigate = useNavigate();
   const page = search.slice(search.lastIndexOf("=") + 1)
-  const { data, isLoading, refetch: callApi } = useApi({
+  const { data, isLoading, refetch: callApi,isRefetching } = useApi({
     url: `/sales-reps?page=${page ? page : 1}&&page_size=20`,
     auto: true,
     method: "get",
@@ -32,8 +32,8 @@ function SellerDashboard() {
     setDeleteItem('')
   }
 
-  if (isLoading) {
-    return <Spinner />
+  if (isLoading&&!isRefetching) {
+    return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
   }
   const sales_reps: any[] = data?.results?.data?.sales_reps ?? []
   const totalPages = Math.ceil(data?.count / 20)
@@ -89,6 +89,7 @@ function SellerDashboard() {
           }
         </section>
       </div>
+     {!isLoading&&isRefetching&&<div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>}
 
       <DeleteModal url="sales-reps" isOpen={deleteItem} onClose={() => setDeleteItem("")} onConfirm={onConfirm} />
     </>

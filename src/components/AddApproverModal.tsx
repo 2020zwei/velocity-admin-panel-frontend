@@ -35,7 +35,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
   className,
 }) => {
 
-  const { isLoading, refetch: update } = useApi<{ results: unknown[] }>({
+  const { isLoading, refetch: update,isRefetching } = useApi<{ results: unknown[] }>({
     url: `/approvers/${isOpen?.id ?? ''}`,
     method: isOpen?.id ? "patch" : "post",
     auto: false,
@@ -88,7 +88,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
       ariaLabelledBy="delete-modal-title"
       ariaDescribedBy="delete-modal-description"
       contentClassName={clsx(
-        "relative w-full max-w-[550px] rounded-2xl bg-black-800 text-white shadow-2xl sm:!px-6 !px-1 py-5 transition-transform transition-opacity duration-150 opacity-100 scale-100 relative w-full max-w-md px-6 py-5 bg-black-800 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-150",
+        "relative w-full max-w-[520px] rounded-2xl bg-black-800 text-white shadow-2xl sm:!px-6 !px-1 py-5 transition-transform transition-opacity duration-150 opacity-100 scale-100 relative w-full max-w-md px-6 py-5 bg-black-800 rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-150",
         className
       )}
     >
@@ -166,7 +166,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
                 <Button
                   type="submit"
                   className="w-full h-[56px] !text-lg"
-                  isLoading={isLoading}
+                  isLoading={isLoading || isRefetching}
                 >
                   {isOpen?.email ? "Update Details" : "Save Details"}
                 </Button>
