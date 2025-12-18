@@ -23,7 +23,7 @@ function SellerDashboard() {
     if (type === "delete") {
       setDeleteItem(item?.id);
     } else if (type === "edit") {
-      navigate(`/seller/add?edit-id=${item.id}`, { state: item, replace: true });
+      navigate(`/seller/add/?edit-id=${item.id}`, { state: item, replace: true });
     }
   };
 
