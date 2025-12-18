@@ -354,7 +354,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                         </div>
                     )}
 
-                    {!items.length && (
+                    {!items.length && !isFetchingMore && (
                         <div className="text-center pb-2 text-sm text-white/70">
                             Not found
                         </div>

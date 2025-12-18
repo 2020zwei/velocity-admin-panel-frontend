@@ -122,7 +122,7 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
                 sameSite: "strict",
               });
             }
-            toast.success(res?.data?.message,{toastId:"succes-toast"});
+            toast.success(res?.data?.message, { toastId: "succes-toast" });
           }
 
           setData(payload);
@@ -139,10 +139,14 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
             err?.message === "canceled";
 
           if (canceled) return Promise.reject({ canceled: true });
-
-          toast.error(err?.response?.data?.message || "Something went wrong", {
-            toastId: "toast-error",
-          });
+          if (err?.code === "ERR_NETWORK") {
+            toast.error(err?.message, { toastId: "network-error" })
+          }
+          if (err?.code !== "ERR_NETWORK") {
+            toast.error((err?.response?.data?.message) || "Something went wrong", {
+              toastId: "toast-error",
+            });
+          }
 
           setError(err);
           hasFetchedOnceRef.current = true;

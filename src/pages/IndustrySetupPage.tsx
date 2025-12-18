@@ -94,17 +94,17 @@ const Tag: React.FC<TagProps> = ({ children, small, active, className }) => (
     </span>
 );
 
-const Toggle: React.FC<ToggleProps> = ({ checked, onChange }) => (
-    <button
-        onClick={() => onChange(!checked)}
-        className={classNames(
-            'w-11 h-6 rounded-full p-1 flex items-center transition-all border-[#1EF46E] border',
-            checked ? 'bg-[#1EF46E33] justify-end' : 'bg-[#2B2B35] justify-start'
-        )}
-    >
-        <span className="w-4 h-4 rounded-full bg-white shadow" />
-    </button>
-);
+// const Toggle: React.FC<ToggleProps> = ({ checked, onChange }) => (
+//     <button
+//         onClick={() => onChange(!checked)}
+//         className={classNames(
+//             'w-11 h-6 rounded-full p-1 flex items-center transition-all border-[#1EF46E] border',
+//             checked ? 'bg-[#1EF46E33] justify-end' : 'bg-[#2B2B35] justify-start'
+//         )}
+//     >
+//         <span className="w-4 h-4 rounded-full bg-white shadow" />
+//     </button>
+// );
 
 const INDUSTRIES: Industry[] = [
     { id: 'hvac', label: 'HVAC Services', hint: 'HVAC repairs, service contracts' },
@@ -365,7 +365,10 @@ const IndustrySetupPage: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <Tag small className={clsx('!py-0 h-6', k.intent === 'High' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{k.intent}</Tag>
-                                                    <Toggle checked={Boolean(k.active)} onChange={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }} />
+                                                    <button type='button'
+                                                    onClick={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }} 
+                                                    className="px-4 rounded-full font-medium hover:opacity-80 duration-300 border border-[#F14190] bg-transparent text-sm text-white !py-0 h-6 min-w-[60px] text-[10px]">Remove</button>
+                                                   
                                                 </div>
                                             </div>
                                         ))}
