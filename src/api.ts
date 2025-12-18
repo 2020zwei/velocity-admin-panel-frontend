@@ -1,6 +1,7 @@
 
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
     withCredentials: true,
@@ -96,6 +97,7 @@ axiosInstance.interceptors.response.use(
                 return Promise.reject(error);
             }
         }
+          
         return Promise.reject(error);
     }
 );

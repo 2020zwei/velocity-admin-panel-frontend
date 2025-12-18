@@ -34,11 +34,11 @@ const SideBar = () => {
             to: "/approvers",
             end: false,
         },
-        // {
-        //     label: "Industory Setup",
-        //     to: "/industory-setup",
-        //     end: false,
-        // },
+        {
+            label: "Industory Setup",
+            to: "/industory-setup",
+            end: false,
+        },
 
     ];
 

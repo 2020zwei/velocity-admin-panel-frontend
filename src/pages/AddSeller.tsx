@@ -49,6 +49,7 @@ const AddSeller = () => {
     const [approverCount, setApproverCount] = useState<number>(0);
 
     const editId = search.slice(search.lastIndexOf("=") + 1);
+    
     const navigate = useNavigate();
 
     // query + paging refs
@@ -80,7 +81,8 @@ const AddSeller = () => {
         transformResponse: (d) => d,
     });
 
-    const totalPages = useMemo(
+    const totalPages 
+    = useMemo(
         () => Math.ceil((approverCount || 0) / PAGE_SIZE),
         [approverCount]
     );
@@ -275,6 +277,7 @@ const AddSeller = () => {
 
     useEffect(() => {
         if (editId) {
+            console.log(state,editId,'editId')
             if (state) {
                 setSelectedKeys(state?.keywords);
                 reset(state);
@@ -301,7 +304,7 @@ const AddSeller = () => {
     }, []);
 
     if ((approverLoading || isKeywordLoading) && !approverRefetching) {
-        return <Spinner />;
+        return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
     }
 
     return (
