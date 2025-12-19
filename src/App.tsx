@@ -31,7 +31,7 @@ const App: React.FC = () => {
               <Route index element={<SellerDashboard />} />
               <Route path="/seller/add" element={<AddSeller />} />
               <Route path="/seller/upload" element={<UploadDocument />} />
-              {/* <Route path="/industory-setup" element={<IndustrySetupPage />} /> */}
+              <Route path="/industory-setup" element={<IndustrySetupPage />} />
               <Route path="/approvers" element={<Approvers />} />
             </Route>
           </Route>
