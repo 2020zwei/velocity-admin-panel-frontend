@@ -19,7 +19,7 @@ const sellerSchema = z.object({
     dealer_code: z.string().min(1, "Dealer Code is required"),
     territory_state: z.string().min(1, "Territory - State is required"),
     zip_code: z.string().min(1, "Zip Code is required"),
-    keywords: z.array(z.string()).min(1, "Select at least one keyword"),
+    // keywords: z.array(z.string()).min(1, "Select at least one keyword"),
     approver_ids: z.array(z.number()),
 });
 
@@ -40,8 +40,8 @@ const extractCount = (res: any) =>
     res?.count ?? res?.results?.count ?? res?.results?.data?.count ?? 0;
 
 const AddSeller = () => {
-    const [filterdKeywords, setFilterdKeywords] = useState<string[]>([]);
-    const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+    // const [filterdKeywords, setFilterdKeywords] = useState<string[]>([]);
+    // const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const { state, search } = useLocation();
     const [states, setStates] = useState<Option[]>([]);
     // ✅ Approvers
@@ -68,11 +68,11 @@ const AddSeller = () => {
         transformResponse: (d) => d,
     });
 
-    const { data: keywordData, isLoading: isKeywordLoading } = useApi<{
-        data: { keywords: any[] };
-    }>({
-        url: `/keywords`,
-    });
+    // const { data: keywordData, isLoading: isKeywordLoading } = useApi<{
+    //     data: { keywords: any[] };
+    // }>({
+    //     url: `/keywords`,
+    // });
 
     const { isLoading, refetch: callApi } = useApi<{ results: any[] }>({
         url: editId ? `/sales-reps/${editId}` : "/sales-reps/invite/",
@@ -216,30 +216,30 @@ const AddSeller = () => {
     // ---------------------------
     // Keywords
     // ---------------------------
-    const handleKeySearch = (e: any) => {
-        const val = e.target.value.toLowerCase().trim();
+    // const handleKeySearch = (e: any) => {
+    //     const val = e.target.value.toLowerCase().trim();
 
-        if (!val) {
-            setFilterdKeywords(keywordData?.data?.keywords ?? []);
-            return;
-        }
+    //     if (!val) {
+    //         setFilterdKeywords(keywordData?.data?.keywords ?? []);
+    //         return;
+    //     }
 
-        const searched = keywordData?.data?.keywords.filter((label) =>
-            label?.toLowerCase().includes(val)
-        );
+    //     const searched = keywordData?.data?.keywords.filter((label) =>
+    //         label?.toLowerCase().includes(val)
+    //     );
 
-        setFilterdKeywords(searched ?? []);
-    };
+    //     setFilterdKeywords(searched ?? []);
+    // };
 
-    const onSelectKeyword = (item: string, setValue: any) => {
-        setSelectedKeys((prev) => {
-            const next = prev.includes(item)
-                ? prev.filter((x) => x !== item)
-                : [...prev, item];
-            setValue("keywords", next, { shouldValidate: true });
-            return next;
-        });
-    };
+    // const onSelectKeyword = (item: string, setValue: any) => {
+    //     setSelectedKeys((prev) => {
+    //         const next = prev.includes(item)
+    //             ? prev.filter((x) => x !== item)
+    //             : [...prev, item];
+    //         setValue("keywords", next, { shouldValidate: true });
+    //         return next;
+    //     });
+    // };
 
     // ---------------------------
     // Form
@@ -247,7 +247,6 @@ const AddSeller = () => {
     const {
         register,
         handleSubmit,
-        setValue,
         control,
         reset,
         watch,
@@ -260,7 +259,7 @@ const AddSeller = () => {
             dealer_code: "",
             territory_state: "",
             zip_code: "",
-            keywords: [],
+            // keywords: [],
             approver_ids: [],
         },
     });
@@ -277,9 +276,9 @@ const AddSeller = () => {
 
     useEffect(() => {
         if (editId) {
-            console.log(state,editId,'editId')
+            // console.log(state,editId,'editId')
             if (state) {
-                setSelectedKeys(state?.keywords);
+                // setSelectedKeys(state?.keywords);
                 reset(state);
             } else {
                 navigate("/");
@@ -288,11 +287,11 @@ const AddSeller = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state?.id]);
 
-    useEffect(() => {
-        if (keywordData?.data?.keywords) {
-            setFilterdKeywords(keywordData?.data?.keywords);
-        }
-    }, [keywordData?.data?.keywords]);
+    // useEffect(() => {
+    //     if (keywordData?.data?.keywords) {
+    //         setFilterdKeywords(keywordData?.data?.keywords);
+    //     }
+    // }, [keywordData?.data?.keywords]);
 
     const GetStatesList = async () => {
         const res = await GetState(233);
@@ -303,7 +302,7 @@ const AddSeller = () => {
         void GetStatesList();
     }, []);
 
-    if ((approverLoading || isKeywordLoading) && !approverRefetching) {
+    if (approverLoading && !approverRefetching) {
         return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
     }
 
@@ -445,7 +444,7 @@ const AddSeller = () => {
                             </div>
 
                             {/* Keywords */}
-                            <div className="flex flex-col gap-5">
+                            {/* <div className="flex flex-col gap-5">
                                 <div className="flex flex-col gap-2">
                                     <div>
                                         <label className="font-medium text-base">
@@ -488,7 +487,7 @@ const AddSeller = () => {
                                         <div className="text-center font-semibold">Keywords not found</div>
                                     )}
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Approvers */}
                             <div>
