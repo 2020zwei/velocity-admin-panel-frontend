@@ -137,6 +137,7 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
             err?.code === "ERR_CANCELED" ||
             err?.name === "CanceledError" ||
             err?.message === "canceled";
+            
 
           if (canceled) return Promise.reject({ canceled: true });
           if (err?.code === "ERR_NETWORK") {
