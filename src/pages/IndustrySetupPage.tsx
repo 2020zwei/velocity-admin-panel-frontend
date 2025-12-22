@@ -1,9 +1,13 @@
 import clsx from 'clsx';
-import React, { useMemo, useState, type ChangeEvent } from 'react';
-import { Button as DradientButton } from "@/components/Button";
-import z from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useEffect, useState, type ChangeEvent } from 'react';
+import { Button as CustomButton } from "@/components/Button";
+import { useApi } from '@/hooks/useApi';
+import Spinner from '@/components/Spinner';
+import { toast } from 'react-toastify';
+import Icon from '@/components/Icon';
+import CompetirorForm, { type FormValues } from '@/components/CompetirorForm';
+import EditCompititorModal from '@/components/EditCompititorModal';
+import DeleteModal from '@/components/DeleteModal';
 const classNames = (...xs: Array<string | false | null | undefined>) => xs.filter(Boolean).join(' ');
 type ButtonVariant = 'primary' | 'ghost' | 'outline';
 
@@ -27,15 +31,11 @@ interface TagProps {
     className?: string
 }
 
-interface ToggleProps {
-    checked: boolean;
-    onChange: (v: boolean) => void;
-}
 
 interface Industry {
-    id: string;
-    label: string;
-    hint?: string;
+    id: number;
+    name: string;
+    description?: string;
 }
 
 interface Keyword {
@@ -46,9 +46,9 @@ interface Keyword {
 
 interface SuggestedCompetitor {
     id: number;
-    name: string;
-    location?: string;
-    website?: string;
+    competitor_name: string;
+    competitor_website?: string;
+    competitor_location?: string;
 }
 
 interface SelectedCompetitor extends SuggestedCompetitor {
@@ -94,81 +94,107 @@ const Tag: React.FC<TagProps> = ({ children, small, active, className }) => (
     </span>
 );
 
-// const Toggle: React.FC<ToggleProps> = ({ checked, onChange }) => (
-//     <button
-//         onClick={() => onChange(!checked)}
-//         className={classNames(
-//             'w-11 h-6 rounded-full p-1 flex items-center transition-all border-[#1EF46E] border',
-//             checked ? 'bg-[#1EF46E33] justify-end' : 'bg-[#2B2B35] justify-start'
-//         )}
-//     >
-//         <span className="w-4 h-4 rounded-full bg-white shadow" />
-//     </button>
-// );
 
-const INDUSTRIES: Industry[] = [
-    { id: 'hvac', label: 'HVAC Services', hint: 'HVAC repairs, service contracts' },
-    { id: 'wireless', label: 'Wireless & Connectivity', hint: 'Wireless, telecommunication, cable' },
-    { id: 'transport', label: 'Transportation & Logistics', hint: 'Fleet, LTL, carriers, moving' },
-    { id: 'education', label: 'Education & Public Sector', hint: 'Education, municipalities, tuition services' },
-];
-
-const SAMPLE_KEYWORDS: Keyword[] = Array.from({ length: 8 }).map((_, i) => ({ id: i + 1, text: `AC system install/replace ${i + 1}`, intent: ['High', 'Mid', 'Low'][i % 3] }));
-
-const SUGGESTED_COMPETITORS: SuggestedCompetitor[] = Array.from({ length: 6 }).map((_, i) => ({
-    id: i + 1,
-    name: `CoolBreeze AC & Heating ${i + 1}`,
-    location: 'Miami, FL - Near 33065',
-    website: `https://www.coolbreeze${i + 1}.com`,
-}));
-
-const schema = z.object({
-    name: z.string("Name is required").min(1),
-    website: z.string().min(1).url(),
-    location: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
 
 /* ----------------------------- IndustrySetupPage ---------------------------- */
 const IndustrySetupPage: React.FC = () => {
-    const {
-        register,
-        handleSubmit,
-        reset,
-        formState: { isValid, errors },
-    } = useForm<FormValues>({
-        resolver: zodResolver(schema),
-        mode: "onChange",
-    });
-
-
     // industrySearch
-    const [industrySearch, setIndustrySearch] = useState<string>('HVAC Services');
-    const [filteredIndustry, setFilteredIndustry] = useState<Industry[]>(INDUSTRIES);
+    const [competitorEditModal, setCompetitorEditModal] = useState<any>("")
+    const [deleteItem, setDeleteItem] = useState<any>("")
+    const [industrySearch, setIndustrySearch] = useState<string>();
+    const [filteredIndustry, setFilteredIndustry] = useState<Industry[]>();
     // end industrySearch
-
-    const [keywordLibrary, setKeywordLibrary] = useState<Keyword[]>(SAMPLE_KEYWORDS);
     const [chosenKeywords, setChosenKeywords] = useState<Array<Keyword & { active?: boolean }>>([]);
-    const [keywordSearch, setKeywordSearch] = useState<string>('');
+    // const [keywordSearch, setKeywordSearch] = useState<string>('');
     const [selectedCompetitors, setSelectedCompetitors] = useState<SelectedCompetitor[]>([]);
 
     const [zip, setZip] = useState<string>('33065');
     // setSuggestions
     const [suggestionSearch, setSuggestionSearch] = useState<string>('');
-    const [suggestions, setSuggestions] = useState<SuggestedCompetitor[]>(SUGGESTED_COMPETITORS);
+    const [suggestions, setSuggestions] = useState<SuggestedCompetitor[]>([]);
     // end setSuggestions
+    // fetch keywords
+    const {
+        isLoading: postLoading,
+        refetch: postData,
+    } = useApi<any>({
+        url: "industry-keywords/",
+        method: "post",
+        auto: false,
+    });
+    const {
+        isLoading: cLoading,
+        refetch: postCompetitors,
+    } = useApi<any>({
+        url: competitorEditModal ? `competitors/${competitorEditModal?.id}/` : 'competitors/',
+        method: competitorEditModal ? "patch" : "post",
+        auto: false,
+    });
+
+    const {
+        data: competitorData,
+        isLoading: cGetLoading,
+        refetch: refetchCompetitor,
+        isRefetching,
+    } = useApi<any>({
+        url: "competitors/",
+    });
+
+    // fetch keywords
+    const {
+        data: filteredKeywordData,
+        isLoading: keywordLoading,
+    } = useApi<any>({
+        url: "/keywords/",
+    });
+    // end fetch keywords
+
+    // fetch keywords
+    const {
+        data: selectedData,
+        isLoading: selectedLoading,
+    } = useApi<any>({
+        url: "industry-keywords/",
+    });
+    // end fetch keywords
 
 
-    const filteredKeywords = useMemo<Keyword[]>(() => {
-        if (!keywordSearch) return keywordLibrary;
-        return keywordLibrary.filter((k) => k.text.toLowerCase().includes(keywordSearch.toLowerCase()));
-    }, [keywordLibrary, keywordSearch]);
+    // fetch industries
+    const {
+        data: industryData,
+        isLoading: industryLoading,
+    } = useApi<any>({
+        url: "/industries/",
+    });
+    // end fetch industries
+    const industries = industryData?.results?.data?.industries
+
+    useEffect(() => {
+        if (industries && !industryLoading) {
+            setIndustrySearch(industries?.[0].name)
+            setFilteredIndustry(industries)
+        }
+    }, [industries, industryLoading])
+
+    useEffect(() => {
+        if (selectedData?.data?.selection?.keywords?.length) {
+            setChosenKeywords(selectedData?.data?.selection?.keywords)
+        }
+    }, [selectedData?.data?.selection?.keywords, selectedLoading])
+
+
+
+    const keyworeds = filteredKeywordData?.results?.data?.keywords ?? []
+
+
+    // const filteredKeywords = useMemo<Keyword[]>(() => {
+    //     if (!keywordSearch) return keyworeds;
+    //     return [...keyworeds].filter((k: any) => k.keyword.toLowerCase().includes(keywordSearch.toLowerCase()));
+    // }, [keyworeds, keywordSearch]);
 
 
     const handleAddKeyword = (kw: Keyword) => {
         const exists = chosenKeywords.some(k => k.id === kw.id);
-
         if (exists) {
             // REMOVE
             setChosenKeywords(prev =>
@@ -195,9 +221,9 @@ const IndustrySetupPage: React.FC = () => {
 
 
     const handleAddCompetitor = (
-        c: { id?: number; name: string; website?: string; location?: string }
+        c: { id?: number; competitor_name: string; competitor_website?: string; competitor_location?: string }
     ) => {
-        const id:any = c.id ?? c.name; // fallback key
+        const id: any = c.id ?? c.competitor_name; // fallback key
 
         const exists = selectedCompetitors.some(comp => comp.id === id);
 
@@ -230,13 +256,13 @@ const IndustrySetupPage: React.FC = () => {
         setIndustrySearch(value);
 
         if (!value.trim()) {
-            setFilteredIndustry(INDUSTRIES);
+            setFilteredIndustry(industries);
             return;
         }
 
         setFilteredIndustry(
-            INDUSTRIES.filter(ind =>
-                ind.label.toLowerCase().includes(value.toLowerCase())
+            industries.filter((ind: Industry) =>
+                ind.name.toLowerCase().includes(value.toLowerCase())
             )
         );
     };
@@ -246,23 +272,37 @@ const IndustrySetupPage: React.FC = () => {
         setSuggestionSearch(value);
 
         if (!value.trim()) {
-            setSuggestions(SUGGESTED_COMPETITORS);
+            setSuggestions([]);
             return;
         }
 
         setSuggestions(
-            SUGGESTED_COMPETITORS.filter(ind =>
-                ind.name.toLowerCase().includes(value.toLowerCase())
+            [].filter((ind) =>
+                ind.competitor_name.toLowerCase().includes(value.toLowerCase())
             )
         );
     };
 
 
-    const submit = (data: FormValues) => {
-
-        reset();
+    const submit = async (data: FormValues) => {
+        await postCompetitors({ body: data })
+         await refetchCompetitor()
+        if (competitorEditModal?.id) {
+            setCompetitorEditModal("")
+        }
     };
-
+    const onDeleteConfirm = async () => {
+        await refetchCompetitor()
+        setDeleteItem("")
+    }
+    const handleSave = async () => {
+        const keyIds = chosenKeywords.map((item) => item.id)
+        const inId = industries.find((el: Industry) => el.id)?.id
+        await postData({ body: { industry_id: inId, keyword_ids: keyIds } });
+    }
+    if ((keywordLoading || industryLoading || selectedLoading || cGetLoading) && !isRefetching) {
+        return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
+    }
 
 
     return (
@@ -291,27 +331,38 @@ const IndustrySetupPage: React.FC = () => {
                         <div className="flex-1">
                             <Panel>
                                 <div className="space-y-3">
-                                    <div className="text-sm text-[#FFFFFFB2] pt-2">SEARCH INDUSTRIES</div>
-                                    <input value={industrySearch} onChange={handleIndustrySearch} className="w-full bg-[#08080C] h-12 rounded-xl px-3 border border-[#FFFFFF1A] text-sm text-white" placeholder="e.g. HVAC, Wireless, Transportation..." />
+                                    <div className="text-sm text-[#FFFFFFB2] pt-2">{!selectedData?.data?.selection?.industry?.id ? 'SEARCH INDUSTRIES' : 'SELECTED INDUSTRY'}</div>
+                                    {!selectedData?.data?.selection?.industry?.id &&
+                                        <input value={industrySearch} onChange={handleIndustrySearch} className="w-full bg-[#08080C] h-12 rounded-xl px-3 border border-[#FFFFFF1A] text-sm text-white" placeholder="e.g. HVAC, Wireless, Transportation..." />}
 
                                     <div className="mt-3 space-y-4">
-                                        {filteredIndustry.map((ind) => (
-                                            <button
-                                                key={ind.id}
-                                                onClick={() => {
-                                                    setIndustrySearch(ind.label);
-                                                    setFilteredIndustry(INDUSTRIES);
-                                                }}
-                                                className={classNames(
-                                                    'w-full text-left p-3 rounded-xl flex flex-col gap-1 hover:opacity-70 duration-300',
-                                                    industrySearch === ind.label
-                                                        ? 'gradient-border text-white'
-                                                        : 'border border-[#FFFFFF1A]'
-                                                )}
-                                            >
-                                                <div className="text-sm">{ind.label}</div>
-                                                <div className="text-xs text-[#FFFFFFB2]">{ind.hint}</div>
-                                            </button>
+                                        {filteredIndustry?.map((ind: Industry) => (
+                                            selectedData?.data?.selection?.industry?.id ?
+                                                <div
+                                                    className={classNames(
+                                                        'w-full text-left p-3 rounded-xl flex flex-col gap-1 cursor-default',
+                                                        ind?.id === selectedData?.data?.selection?.industry?.id
+                                                            ? 'gradient-border text-white'
+                                                            : 'border border-[#FFFFFF1A] opacity-70'
+                                                    )}
+                                                >{selectedData?.data?.selection?.industry?.name}</div>
+                                                :
+                                                <button
+                                                    key={ind.id}
+                                                    onClick={() => {
+                                                        setIndustrySearch(ind.name);
+                                                        setFilteredIndustry(industries);
+                                                    }}
+                                                    className={classNames(
+                                                        'w-full text-left p-3 rounded-xl flex flex-col gap-1 hover:opacity-70 duration-300',
+                                                        industrySearch === ind.name
+                                                            ? 'gradient-border text-white'
+                                                            : 'border border-[#FFFFFF1A]'
+                                                    )}
+                                                >
+                                                    <div className="text-sm">{ind.name}</div>
+                                                    <div className="text-xs text-[#FFFFFFB2]">{ind.description}</div>
+                                                </button>
                                         ))}
                                     </div>
                                 </div>
@@ -323,21 +374,26 @@ const IndustrySetupPage: React.FC = () => {
                             <Panel title="Industry keyword library" subTitleClass='max-w-[270px]' subtitle="Choose keywords to add to your selection. HVAC SERVICE KEYWORDS">
 
                                 <div className="grid gap-4">
-                                    {filteredKeywords.map((kw) => (
-                                        <div key={kw.id} className="flex items-center text-[#FFFFFF] font-normal justify-between gap-4 p-3 rounded-xl border border-[#FFFFFF1A]">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="text-sm truncate">{kw.text}</div>
-                                                {/* active={kw.intent === 'High'} */}
-                                                <Tag small className={clsx('!py-0 h-6', kw.intent === 'High' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{kw.intent}</Tag>
+                                    {keyworeds.map((kw: any) => {
+                                        return (
+                                            <div key={kw.id} className="flex items-center text-[#FFFFFF] font-normal justify-between gap-4 p-3 rounded-xl border border-[#FFFFFF1A]">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="text-sm truncate">{kw.keyword}</div>
+                                                    {/* active={kw.intent === 'High'} */}
+                                                    <Tag small className={clsx('!py-0 h-6', kw.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{kw?.intent_level}</Tag>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Button className={clsx('!py-0 h-6 min-w-[60px] text-[10px]', chosenKeywords.find((c) => c.id === kw.id) ? '!border-[#00A63E]' : '!border-[#FFFFFFB2]')} variant={selectedCompetitors.find((c) => c.id === kw.id) ? 'ghost' : 'outline'} onClick={() => {
+                                                        chosenKeywords.length >= 5 ?
+                                                            toast.info("Limit of keywords select reached", { toastId: 'limit-accseed' })
+                                                            : handleAddKeyword(kw)
+                                                    }}>
+                                                        {chosenKeywords.find((c) => c.id === kw.id) ? 'Added' : 'Add'}
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Button className={clsx('!py-0 h-6 min-w-[60px] text-[10px]', chosenKeywords.find((c) => c.id === kw.id) ? '!border-[#00A63E]' : '!border-[#FFFFFFB2]')} variant={selectedCompetitors.find((c) => c.id === kw.id) ? 'ghost' : 'outline'} onClick={() => handleAddKeyword(kw)}>
-                                                    {chosenKeywords.find((c) => c.id === kw.id) ? 'Added' : 'Add'}
-                                                </Button>
-                                                {/* <Button variant="outline" className='border-[#00A63E] !py-0 h-6 min-w-[60px] text-[10px]' onClick={() => handleAddKeyword(kw)}>Add</Button> */}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                                 <div className='text-sm text-[#FFFFFFB2] py-4 border-b border-[#FFFFFF1A]'>
                                     Keywords here are tailored to that industry (AC system, carriers, student tablets, etc.). Click "Add" to send them to your chosen list.
@@ -358,17 +414,17 @@ const IndustrySetupPage: React.FC = () => {
                                             <div className="text-sm text-[#FFFFFFB2]">No keywords selected yet.</div>
                                         )}
 
-                                        {chosenKeywords.map((k) => (
+                                        {chosenKeywords.map((k: any) => (
                                             <div key={k.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#FFFFFF1A]">
                                                 <div className="min-w-0">
-                                                    <div className="text-sm truncate">{k.text}</div>
+                                                    <div className="text-sm truncate">{k?.keyword}</div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <Tag small className={clsx('!py-0 h-6', k.intent === 'High' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{k.intent}</Tag>
+                                                    <Tag small className={clsx('!py-0 h-6', k?.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{k?.intent_level}</Tag>
                                                     <button type='button'
-                                                    onClick={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }} 
-                                                    className="px-4 rounded-full font-medium hover:opacity-80 duration-300 border border-[#F14190] bg-transparent text-sm text-white !py-0 h-6 min-w-[60px] text-[10px]">Remove</button>
-                                                   
+                                                        onClick={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }}
+                                                        className="px-4 rounded-full font-medium hover:opacity-80 duration-300 border border-[#F14190] bg-transparent text-sm text-white !py-0 h-6 min-w-[60px] text-[10px]">Remove</button>
+
                                                 </div>
                                             </div>
                                         ))}
@@ -408,14 +464,14 @@ const IndustrySetupPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className='text-xs mt-4'>SUGGESTIONS NEAR YOU</div>
-                                <div className="space-y-5">
+                                <div className='text-xs mt-4 hidden'>SUGGESTIONS NEAR YOU</div>
+                                <div className="space-y-5 hidden">
                                     {!suggestions.length && <div className='text-center'>Suggestions near you not found</div>}
                                     {suggestions.map((s) => (
                                         <div key={s.id} className="flex items-center text-[#FFFFFF] font-normal justify-between gap-4 p-3 rounded-xl border border-[#FFFFFF1A]">
                                             <div>
-                                                <div className="font-medium">{s.name}</div>
-                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#1B1A25] rounded-full w-fit px-3 py-1 mt-1">{s.location}</div>
+                                                <div className="font-medium">{s.competitor_name}</div>
+                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#1B1A25] rounded-full w-fit px-3 py-1 mt-1">{s.competitor_location}</div>
                                             </div>
 
                                             <div>
@@ -426,41 +482,11 @@ const IndustrySetupPage: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
-                                <form onSubmit={handleSubmit(submit)} className="grid gap-5 mt-5">
-
-                                    <div className="mt-4 border-b pb-8 border-[#FFFFFF1A]">
-                                        <div className=' font-semibold'>Add a custom competitor</div>
-                                        <p className="text-sm text-[#FFFFFFB2] mt-1">If you don't see a competitor listed, add them manually. Name and website are required..</p>
-                                        <div className="grid gap-5 mt-5">
-                                            <div className='flex items-center gap-6'>
-                                                <div className='flex-1'>
-                                                    <div className='flex-1 flex flex-col'>
-                                                        <label className="text-sm font-medium text-[#FFFFFF] mb-1">COMPETITOR NAME</label>
-                                                        <input {...register("name")} placeholder="e.g. CoolBreeze AC & Heating" className="bg-[#09090E] h-11 text-xs rounded-xl px-3 border border-[#FFFFFF1A] text-white w-full" />
-                                                    </div>
-                                                    {errors.name && <p className='text-red-500 text-xs mt-1'>{errors.name.message}</p>}
-                                                </div>
-
-
-                                                <div className='flex-1'>
-                                                    <div className='flex-1 flex flex-col'>
-                                                        <label className="text-sm font-medium text-[#FFFFFF] mb-1">COMPETITOR WEBSITE</label>
-                                                        <input {...register("website")} placeholder="https://www.example.com" className="bg-[#09090E] h-11 text-xs rounded-xl px-3 border border-[#FFFFFF1A] text-white w-full" />
-                                                    </div>
-                                                    {errors.website && <p className='text-red-500 text-xs mt-1'>{errors.website.message}</p>}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-[#FFFFFF] mb-1">LOCATION (OPTIONAL)</label>
-                                                <div className='flex items-center gap-6'>
-                                                    <input {...register("location")} placeholder="City, ST" className="bg-[#09090E] h-11 text-xs rounded-xl px-3 border border-[#FFFFFF1A] text-white w-full" />
-                                                    <Button type='submit' variant="outline" className='border-[#FFFFFF] whitespace-nowrap'>Add custom competitor</Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </form>
+                                {competitorData?.results?.data?.competitors?.length<3&&
+                                <CompetirorForm
+                                    obSubmit={submit}
+                                    isPending={cLoading}
+                                />}
                             </div>
                         </Panel>
                     </div>
@@ -468,20 +494,22 @@ const IndustrySetupPage: React.FC = () => {
                     <div className="lg:col-span-4 mt-2">
                         <Panel title={`Selected Competitors (${selectedCompetitors.length}/3)`} subtitle="VelocityIQ will pull details from these websites when generating ProposalIQ analysis.">
                             <div className="space-y-3">
-                                {selectedCompetitors.length === 0 && <div className="text-sm text-[#9CA0A6]">No competitors selected.</div>}
-                                {selectedCompetitors.map((c) => (
+                                {competitorData?.results?.data?.competitors.length === 0 && <div className="text-sm text-[#9CA0A6]">No competitors selected.</div>}
+                                {competitorData?.results?.data?.competitors.map((c) => (
                                     <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-[#FFFFFF1A]">
                                         <div>
-                                            <div className="font-medium">{c.name}</div>
+                                            <div className="font-medium">{c.competitor_name}</div>
                                             <div className='flex items-center gap-2 mt-1'>
-                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#1B1A25] rounded-full w-fit px-3 py-1">{c.location}</div>
-                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#08080C] rounded-full w-fit px-3 py-1">{c.website}</div>
+                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#1B1A25] rounded-full w-fit px-3 py-1">{c.competitor_location}</div>
+                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#08080C] rounded-full w-fit px-3 py-1">{c.competitor_website}</div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <Button variant='outline' className={clsx('!py-0 h-6 min-w-[60px] text-[10px]')} onClick={() => handleRemoveCompetitor(c.id)}>
-                                                Remove
-                                            </Button>
+                                        <div className='flex items-center gap-3'>
+                                            <button onClick={() => (setCompetitorEditModal(c))}> <Icon name='edit' /></button>
+                                            <button onClick={() => setDeleteItem(c?.id)}> <Icon name='trash' /></button>
+                                            {/* <Button variant='outline' onClick={() => handleRemoveCompetitor(c.id)}>
+                                               
+                                            </Button> */}
                                         </div>
                                     </div>
                                 ))}
@@ -503,11 +531,25 @@ const IndustrySetupPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <DradientButton onClick={() => alert('Save & Next')} className='!rounded-full ms-auto'>Save & Next</DradientButton>
+                    <CustomButton type='button' onClick={handleSave} isLoading={postLoading} className='!rounded-full ms-auto'>Save & Next</CustomButton>
                 </div>
             </div>
+            {competitorEditModal && <EditCompititorModal
+                onConfirm={submit}
+                onClose={() => setCompetitorEditModal("")}
+                isOpen={competitorEditModal}
+                confirmLoading={cLoading}
+            />}
+            <DeleteModal
+                url="competitors"
+                isOpen={deleteItem}
+                onClose={() => setDeleteItem(false)}
+                onConfirm={onDeleteConfirm}
+            />
         </div>
     );
 };
 
 export default IndustrySetupPage;
+
+

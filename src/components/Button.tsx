@@ -1,7 +1,6 @@
-// src/components/ui/PrimaryButton.tsx
-import clsx from "clsx";
 import * as React from "react";
 import Spinner from "./Spinner";
+import {twMerge} from "tailwind-merge"
 
 type PrimaryButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
 interface ButtonProps extends PrimaryButtonProps {
@@ -49,7 +48,7 @@ export function Button({ className, children, onClick, bgClass = 'bg-blue-gradie
             {...props}
             disabled={isLoading}
             onClick={handleClick}
-            className={clsx(
+            className={twMerge(
                 "relative overflow-hidden  flex items-center justify-center h-11 min-w-[146px] px-3 py-[11px] rounded-md text-sm font-semibold shadow-lg",
                 "transition-all duration-150 ease-out",
                 "hover:shadow-xl hover:-translate-y-0.5 hover:brightness-110",
