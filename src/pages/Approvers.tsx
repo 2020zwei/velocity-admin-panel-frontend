@@ -68,7 +68,7 @@ function Approvers() {
                                     <thead>
                                         <tr className="bg-blue-gradient text-xs sm:text-sm md:text-base font-medium capitalize tracking-wide text-white">
                                             <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap rounded-l-md">
-                                                Seller Name
+                                               Approver Name
                                             </th>
                                             <th className="px-4 sm:px-6 py-3 text-left whitespace-nowrap">
                                                 Email
