@@ -384,7 +384,7 @@ const IndustrySetupPage: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Button className={clsx('!py-0 h-6 min-w-[60px] text-[10px]', chosenKeywords.find((c) => c.id === kw.id) ? '!border-[#00A63E]' : '!border-[#FFFFFFB2]')} variant={selectedCompetitors.find((c) => c.id === kw.id) ? 'ghost' : 'outline'} onClick={() => {
-                                                        chosenKeywords.length >= 5 ?
+                                                        chosenKeywords.length >= 8 && !chosenKeywords.find((c) => c.id === kw.id) ?
                                                             toast.info("Limit of keywords select reached", { toastId: 'limit-accseed' })
                                                             : handleAddKeyword(kw)
                                                     }}>
@@ -520,16 +520,7 @@ const IndustrySetupPage: React.FC = () => {
 
                 {/* Bottom preview & CTA */}
                 <div className='mt-5'>
-                    <div className='flex gap-9 mb-5'>
-                        <div className="text-sm text-[#FFFFFFB2] max-w-[280px]">
-                            Tip: keep it simple for your sellers. ZIP + industry + 2-3 real local competitors is more than enough.
-                        </div>
-
-                        <div className="bg-[#07070A] border border-[#FFFFFF1A] rounded p-4 min-w-[320px]">
-                            <div className="text-xs text-[#FFFFFFB2] mb-2">Preview (what VelocityIQ saves):</div>
-                            <pre className="text-xs text-[#FFFFFFB2] max-h-40 overflow-auto dark-scrollbar bg-transparent">{JSON.stringify({ industryId: industrySearch, keywords: chosenKeywords, competitors: selectedCompetitors, zip }, null, 2)}</pre>
-                        </div>
-                    </div>
+                   
 
                     <CustomButton type='button' onClick={handleSave} isLoading={postLoading} className='!rounded-full ms-auto'>Save & Next</CustomButton>
                 </div>
