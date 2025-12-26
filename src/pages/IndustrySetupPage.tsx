@@ -345,7 +345,7 @@ const IndustrySetupPage: React.FC = () => {
                                                             ? 'gradient-border text-white'
                                                             : 'border border-[#FFFFFF1A] opacity-70'
                                                     )}
-                                                >{selectedData?.data?.selection?.industry?.name}</div>
+                                                >{ind.name}</div>
                                                 :
                                                 <button
                                                     key={ind.id}
