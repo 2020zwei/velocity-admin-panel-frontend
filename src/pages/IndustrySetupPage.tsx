@@ -315,7 +315,7 @@ const IndustrySetupPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3 mt-5 mb-3">
                         <div className="rounded-full bg-[#1B1A25] border border-[#FFFFFF1A] px-4 py-2 text-xs">STEP 1 - CHOOSE INDUSTRY</div>
-                        <div className="rounded-full bg-[#1B1A25] border border-[#FFFFFF1A] px-4 py-2 text-xs">STEP 2 - PICK KEYWORDS (MAX 5)</div>
+                        <div className="rounded-full bg-[#1B1A25] border border-[#FFFFFF1A] px-4 py-2 text-xs">STEP 2 - PICK KEYWORDS (MAX 8)</div>
                         <div className="rounded-full bg-[#1B1A25] border border-[#FFFFFF1A] px-4 py-2 text-xs">STEP 3 - ADD LOCAL COMPETITORS (MAX 3)</div>
                     </div>
                 </div>
@@ -444,13 +444,14 @@ const IndustrySetupPage: React.FC = () => {
                             <div className="grid gap-3">
                                 <div className="flex gap-4 mb-2">
                                     <div className='flex-1 flex flex-col'>
+                                        {/* value={zip} onChange={(e) => setZip(e.target.value)} */}
                                         <label className='text-sm font-medium text-[#FFFFFF] mb-1'>YOUR COMPANY ZIP</label>
-                                        <input value={zip} onChange={(e) => setZip(e.target.value)} className="bg-[#09090E] h-11 rounded-xl px-3 border border-[#FFFFFF1A] text-xs text-white w-full" />
+                                        <input  className="bg-[#09090E] h-11 rounded-xl px-3 border border-[#FFFFFF1A] text-xs text-white w-full" />
                                         <p className='text-sm text-[#FFFFFFB2] mt-3'>This helps VelociIQ suggest local competitors around your market.</p>
                                     </div>
                                     <div className='flex-1 flex flex-col'>
                                         <label className='text-sm font-medium text-[#FFFFFF] mb-1'>CUSTOMER INDUSTRY</label>
-                                        <input value={zip} onChange={(e) => setZip(e.target.value)} className="bg-[#09090E] h-11 text-xs rounded-xl px-3 border border-[#FFFFFF1A] text-white w-full" />
+                                        <input className="bg-[#09090E] h-11 text-xs rounded-xl px-3 border border-[#FFFFFF1A] text-white w-full" />
                                         <p className='text-sm text-[#FFFFFFB2] mt-3'>This matches the industry you selected above.</p>
                                     </div>
                                 </div>
