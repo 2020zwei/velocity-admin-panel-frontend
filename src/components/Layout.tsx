@@ -7,16 +7,16 @@ import { useWindowSize } from "@/hooks/useResponsive";
 
 
 const Layout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
   const navigate = useNavigate();
   const { width } = useWindowSize();
   if (width > 1290 && isSidebarOpen) {
     setIsSidebarOpen(false);
   }
 
-  const handleClose=(e:any)=>{
-    if(e.target.tagName==="ASIDE"){
-       setIsSidebarOpen(false);
+  const handleClose = (e: any) => {
+    if (e.target.tagName === "ASIDE") {
+      setIsSidebarOpen(false);
     }
   }
 
@@ -31,11 +31,11 @@ const Layout = () => {
     <div className="min-h-screen">
       {/* Fixed Header */}
       <header className={clsx("fixed w-full z-50 h-16 border-b bg-black-800 border-[#151623] flex items-center justify-between sm:px-8 px-2 bg-dark-800")}>
-        <Header isSidebarOpen={isSidebarOpen} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Header  isSidebarOpen={isSidebarOpen} onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
       </header>
 
       {/* Fixed Sidebar */}
-      <aside className={clsx("fixed z-[60] top-16 left-0 bottom-0 lg-xl:w-fit", isSidebarOpen?"active-sidebar w-full":"")} onClick={handleClose}>
+      <aside className={clsx("fixed z-[60] top-16 left-0 bottom-0 lg-xl:w-fit", isSidebarOpen ? "active-sidebar w-full" : "")} onClick={handleClose}>
         <div className={clsx("fixed top-16 left-0 bottom-0 bg-black-800 border-r border-[#151623] flex flex-col duration-500 lg-xl:translate-x-0 -translate-x-[400px]", isSidebarOpen ? "!translate-x-0" : "")}>
           <SideBar />
         </div>

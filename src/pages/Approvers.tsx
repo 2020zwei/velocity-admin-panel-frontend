@@ -16,7 +16,7 @@ function Approvers() {
     const [isApproverModal, setIsApproverModal] = useState<any>("");
     const page = search.slice(search.lastIndexOf("=") + 1)
     const { data: apvData, isLoading, refetch, isRefetching } = useApi({
-        url: `/approvers?page=${page ? page : 1}&&page_size=20`,
+        url: `/admin/approvers?page=${page ? page : 1}&&page_size=20`,
         auto: true,
         method: "get",
         transformResponse: (d) => d

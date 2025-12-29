@@ -8,6 +8,7 @@ import Icon from '@/components/Icon';
 import CompetirorForm, { type FormValues } from '@/components/CompetirorForm';
 import EditCompititorModal from '@/components/EditCompititorModal';
 import DeleteModal from '@/components/DeleteModal';
+import { Link } from 'react-router-dom';
 const classNames = (...xs: Array<string | false | null | undefined>) => xs.filter(Boolean).join(' ');
 type ButtonVariant = 'primary' | 'ghost' | 'outline';
 
@@ -118,7 +119,7 @@ const IndustrySetupPage: React.FC = () => {
         isLoading: postLoading,
         refetch: postData,
     } = useApi<any>({
-        url: "industry-keywords/",
+        url: "/admin/industry-keywords/",
         method: "post",
         auto: false,
     });
@@ -126,7 +127,7 @@ const IndustrySetupPage: React.FC = () => {
         isLoading: cLoading,
         refetch: postCompetitors,
     } = useApi<any>({
-        url: competitorEditModal ? `competitors/${competitorEditModal?.id}/` : 'competitors/',
+        url: competitorEditModal ? `/admin/competitors/${competitorEditModal?.id}/` : '/admin/competitors/',
         method: competitorEditModal ? "patch" : "post",
         auto: false,
     });
@@ -137,7 +138,7 @@ const IndustrySetupPage: React.FC = () => {
         refetch: refetchCompetitor,
         isRefetching,
     } = useApi<any>({
-        url: "competitors/",
+        url: "/admin/competitors/",
     });
 
     // fetch keywords
@@ -145,7 +146,7 @@ const IndustrySetupPage: React.FC = () => {
         data: filteredKeywordData,
         isLoading: keywordLoading,
     } = useApi<any>({
-        url: "/keywords/",
+        url: "/admin/keywords/",
     });
     // end fetch keywords
 
@@ -154,7 +155,7 @@ const IndustrySetupPage: React.FC = () => {
         data: selectedData,
         isLoading: selectedLoading,
     } = useApi<any>({
-        url: "industry-keywords/",
+        url: "/admin/industry-keywords/",
     });
     // end fetch keywords
 
@@ -164,7 +165,7 @@ const IndustrySetupPage: React.FC = () => {
         data: industryData,
         isLoading: industryLoading,
     } = useApi<any>({
-        url: "/industries/",
+        url: "/admin/industries/",
     });
     // end fetch industries
     const industries = industryData?.results?.data?.industries
@@ -515,7 +516,7 @@ const IndustrySetupPage: React.FC = () => {
                                             <div className="font-medium">{c.competitor_name}</div>
                                             <div className='flex items-center gap-2 mt-1'>
                                                 <div className="text-[10px] text-[#FFFFFFB2] bg-[#1B1A25] rounded-full w-fit px-3 py-1">{c.competitor_location}</div>
-                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#08080C] rounded-full w-fit px-3 py-1">{c.competitor_website}</div>
+                                                <Link to={c.competitor_website} target='_blank' className="text-[10px] text-[#FFFFFFB2] bg-[#08080C] rounded-full w-fit px-3 py-1">{c.competitor_website}</Link>
                                             </div>
                                         </div>
                                         <div className='flex items-center gap-3'>

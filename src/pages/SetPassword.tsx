@@ -34,7 +34,7 @@ const SetPassword: React.FC = () => {
     const [showConfirm, setShowConfirm] = useState(false);
 
     const { isLoading, refetch: update } = useApi({
-        url: "/sales-reps/set-password/",
+        url: "/admin/sales-reps/set-password/",
         method: "post",
         auto: false,
         transformResponse: (d) => d,
