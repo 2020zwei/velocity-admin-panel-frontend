@@ -286,7 +286,7 @@ const IndustrySetupPage: React.FC = () => {
 
     const submit = async (data: FormValues) => {
         await postCompetitors({ body: data })
-         await refetchCompetitor()
+        await refetchCompetitor()
         if (competitorEditModal?.id) {
             setCompetitorEditModal("")
         }
@@ -383,13 +383,26 @@ const IndustrySetupPage: React.FC = () => {
                                                     <Tag small className={clsx('!py-0 h-6', kw.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{kw?.intent_level}</Tag>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <Button className={clsx('!py-0 h-6 min-w-[60px] text-[10px]', chosenKeywords.find((c) => c.id === kw.id) ? '!border-[#00A63E]' : '!border-[#FFFFFFB2]')} variant={selectedCompetitors.find((c) => c.id === kw.id) ? 'ghost' : 'outline'} onClick={() => {
-                                                        chosenKeywords.length >= 8 && !chosenKeywords.find((c) => c.id === kw.id) ?
-                                                            toast.info("Limit of keywords select reached", { toastId: 'limit-accseed' })
-                                                            : handleAddKeyword(kw)
-                                                    }}>
-                                                        {chosenKeywords.find((c) => c.id === kw.id) ? 'Added' : 'Add'}
+                                                    <Button
+                                                        className={clsx(
+                                                            '!py-0 h-6 min-w-[60px] text-[10px]',
+                                                            chosenKeywords.some((c) => c.id === kw.id)
+                                                                ? '!border-[#00A63E]'
+                                                                : '!border-[#FFFFFFB2]'
+                                                        )}
+                                                        variant={chosenKeywords.some((c) => c.id === kw.id) ? 'ghost' : 'outline'}
+                                                        onClick={() => {
+                                                            if (chosenKeywords.some((c) => c.id === kw.id)) return;
+                                                            if (chosenKeywords.length >= 8) {
+                                                                toast.info("Limit of keywords select reached", { toastId: 'limit-accseed' });
+                                                                return;
+                                                            }
+                                                            handleAddKeyword(kw);
+                                                        }}
+                                                    >
+                                                        {chosenKeywords.some((c) => c.id === kw.id) ? 'Added' : 'Add'}
                                                     </Button>
+
                                                 </div>
                                             </div>
                                         )
@@ -446,7 +459,7 @@ const IndustrySetupPage: React.FC = () => {
                                     <div className='flex-1 flex flex-col'>
                                         {/* value={zip} onChange={(e) => setZip(e.target.value)} */}
                                         <label className='text-sm font-medium text-[#FFFFFF] mb-1'>YOUR COMPANY ZIP</label>
-                                        <input  className="bg-[#09090E] h-11 rounded-xl px-3 border border-[#FFFFFF1A] text-xs text-white w-full" />
+                                        <input className="bg-[#09090E] h-11 rounded-xl px-3 border border-[#FFFFFF1A] text-xs text-white w-full" />
                                         <p className='text-sm text-[#FFFFFFB2] mt-3'>This helps VelociIQ suggest local competitors around your market.</p>
                                     </div>
                                     <div className='flex-1 flex flex-col'>
@@ -483,11 +496,11 @@ const IndustrySetupPage: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
-                                {competitorData?.results?.data?.competitors?.length<3&&
-                                <CompetirorForm
-                                    obSubmit={submit}
-                                    isPending={cLoading}
-                                />}
+                                {competitorData?.results?.data?.competitors?.length < 3 &&
+                                    <CompetirorForm
+                                        obSubmit={submit}
+                                        isPending={cLoading}
+                                    />}
                             </div>
                         </Panel>
                     </div>
@@ -521,7 +534,7 @@ const IndustrySetupPage: React.FC = () => {
 
                 {/* Bottom preview & CTA */}
                 <div className='mt-5'>
-                   
+
 
                     <CustomButton type='button' onClick={handleSave} isLoading={postLoading} className='!rounded-full ms-auto'>Save & Next</CustomButton>
                 </div>
