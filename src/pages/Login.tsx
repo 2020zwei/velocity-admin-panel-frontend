@@ -24,7 +24,7 @@ type ApproverFormValues = z.infer<typeof approverSchema>;
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const { data, isLoading, error, refetch: login } = useApi<{ results: any[] }>({
-        url: "/signin/",
+        url: "/admin/signin/",
         method: "post",
         auto: false,
         transformResponse: (d) => d,

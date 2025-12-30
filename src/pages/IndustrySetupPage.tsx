@@ -9,6 +9,7 @@ import CompetirorForm, { type FormValues } from '@/components/CompetirorForm';
 import EditCompititorModal from '@/components/EditCompititorModal';
 import DeleteModal from '@/components/DeleteModal';
 import { Link } from 'react-router-dom';
+import { ShimmerRow, ShimmerWave } from '@/components/TableShimmerRow';
 const classNames = (...xs: Array<string | false | null | undefined>) => xs.filter(Boolean).join(' ');
 type ButtonVariant = 'primary' | 'ghost' | 'outline';
 
@@ -279,7 +280,8 @@ const IndustrySetupPage: React.FC = () => {
 
         setSuggestions(
             [].filter((ind) =>
-                ind.competitor_name.toLowerCase().includes(value.toLowerCase())
+                // @ts-ignore
+                ind?.competitor_name?.toLowerCase().includes(value.toLowerCase())
             )
         );
     };
@@ -301,10 +303,11 @@ const IndustrySetupPage: React.FC = () => {
         const inId = industries.find((el: Industry) => el.id)?.id
         await postData({ body: { industry_id: inId, keyword_ids: keyIds } });
     }
-    if ((keywordLoading || industryLoading || selectedLoading || cGetLoading) && !isRefetching) {
-        return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
-    }
+    // if ((keywordLoading || industryLoading || selectedLoading || cGetLoading) && !isRefetching) {
+    //     return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
+    // }
 
+    const showSkeleton = keywordLoading || industryLoading || selectedLoading || cGetLoading || isRefetching
 
     return (
         <div className="min-h-screen text-white">
@@ -335,36 +338,39 @@ const IndustrySetupPage: React.FC = () => {
                                     <div className="text-sm text-[#FFFFFFB2] pt-2">{!selectedData?.data?.selection?.industry?.id ? 'SEARCH INDUSTRIES' : 'SELECTED INDUSTRY'}</div>
                                     {!selectedData?.data?.selection?.industry?.id &&
                                         <input value={industrySearch} onChange={handleIndustrySearch} className="w-full bg-[#08080C] h-12 rounded-xl px-3 border border-[#FFFFFF1A] text-sm text-white" placeholder="e.g. HVAC, Wireless, Transportation..." />}
-
                                     <div className="mt-3 space-y-4">
-                                        {filteredIndustry?.map((ind: Industry) => (
-                                            selectedData?.data?.selection?.industry?.id ?
-                                                <div
-                                                    className={classNames(
-                                                        'w-full text-left p-3 rounded-xl flex flex-col gap-1 cursor-default',
-                                                        ind?.id === selectedData?.data?.selection?.industry?.id
-                                                            ? 'gradient-border text-white'
-                                                            : 'border border-[#FFFFFF1A] opacity-70'
-                                                    )}
-                                                >{ind.name}</div>
-                                                :
-                                                <button
-                                                    key={ind.id}
-                                                    onClick={() => {
-                                                        setIndustrySearch(ind.name);
-                                                        setFilteredIndustry(industries);
-                                                    }}
-                                                    className={classNames(
-                                                        'w-full text-left p-3 rounded-xl flex flex-col gap-1 hover:opacity-70 duration-300',
-                                                        industrySearch === ind.name
-                                                            ? 'gradient-border text-white'
-                                                            : 'border border-[#FFFFFF1A]'
-                                                    )}
-                                                >
-                                                    <div className="text-sm">{ind.name}</div>
-                                                    <div className="text-xs text-[#FFFFFFB2]">{ind.description}</div>
-                                                </button>
-                                        ))}
+                                        {showSkeleton ? (
+                                            Array.from({ length: 5 }).map((_, i) => <ShimmerWave key={`shim1-${i}`}/>)
+                                        ) :
+                                            filteredIndustry?.map((ind: Industry) => (
+                                                selectedData?.data?.selection?.industry?.id ?
+                                                    <div
+                                                        className={classNames(
+                                                            'w-full text-left p-3 rounded-xl flex flex-col gap-1 cursor-default',
+                                                            ind?.id === selectedData?.data?.selection?.industry?.id
+                                                                ? 'gradient-border text-white'
+                                                                : 'border border-[#FFFFFF1A] opacity-70'
+                                                        )}
+                                                    >{ind.name}</div>
+                                                    :
+                                                    <button
+                                                        key={ind.id}
+                                                        onClick={() => {
+                                                            setIndustrySearch(ind.name);
+                                                            setFilteredIndustry(industries);
+                                                        }}
+                                                        className={classNames(
+                                                            'w-full text-left p-3 rounded-xl flex flex-col gap-1 hover:opacity-70 duration-300',
+                                                            industrySearch === ind.name
+                                                                ? 'gradient-border text-white'
+                                                                : 'border border-[#FFFFFF1A]'
+                                                        )}
+                                                    >
+                                                        <div className="text-sm">{ind.name}</div>
+                                                        <div className="text-xs text-[#FFFFFFB2]">{ind.description}</div>
+                                                    </button>
+                                            ))
+                                        }
                                     </div>
                                 </div>
                             </Panel>
@@ -373,49 +379,54 @@ const IndustrySetupPage: React.FC = () => {
                         {/* keyword library */}
                         <div className="max-w-[460px]">
                             <Panel title="Industry keyword library" subTitleClass='max-w-[270px]' subtitle="Choose keywords to add to your selection. HVAC SERVICE KEYWORDS">
+                                {showSkeleton ? (
+                                    Array.from({ length: 5 }).map((_, i) => <ShimmerWave key={`shim2-${i}`}/>)
+                                ) :
+                                    <>
+                                        <div className="grid gap-4">
+                                            {keyworeds.map((kw: any) => {
+                                                return (
+                                                    <div key={kw.id} className="flex items-center text-[#FFFFFF] font-normal justify-between gap-4 p-3 rounded-xl border border-[#FFFFFF1A]">
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <div className="text-sm truncate">{kw.keyword}</div>
+                                                            {/* active={kw.intent === 'High'} */}
+                                                            <Tag small className={clsx('!py-0 h-6', kw.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{kw?.intent_level}</Tag>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Button
+                                                                className={clsx(
+                                                                    '!py-0 h-6 min-w-[60px] text-[10px]',
+                                                                    chosenKeywords.some((c) => c.id === kw.id)
+                                                                        ? '!border-[#00A63E]'
+                                                                        : '!border-[#FFFFFFB2]'
+                                                                )}
+                                                                variant={chosenKeywords.some((c) => c.id === kw.id) ? 'ghost' : 'outline'}
+                                                                onClick={() => {
+                                                                    if (chosenKeywords.some((c) => c.id === kw.id)) return;
+                                                                    if (chosenKeywords.length >= 8) {
+                                                                        toast.info("Limit of keywords select reached", { toastId: 'limit-accseed' });
+                                                                        return;
+                                                                    }
+                                                                    handleAddKeyword(kw);
+                                                                }}
+                                                            >
+                                                                {chosenKeywords.some((c) => c.id === kw.id) ? 'Added' : 'Add'}
+                                                            </Button>
 
-                                <div className="grid gap-4">
-                                    {keyworeds.map((kw: any) => {
-                                        return (
-                                            <div key={kw.id} className="flex items-center text-[#FFFFFF] font-normal justify-between gap-4 p-3 rounded-xl border border-[#FFFFFF1A]">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="text-sm truncate">{kw.keyword}</div>
-                                                    {/* active={kw.intent === 'High'} */}
-                                                    <Tag small className={clsx('!py-0 h-6', kw.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{kw?.intent_level}</Tag>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        className={clsx(
-                                                            '!py-0 h-6 min-w-[60px] text-[10px]',
-                                                            chosenKeywords.some((c) => c.id === kw.id)
-                                                                ? '!border-[#00A63E]'
-                                                                : '!border-[#FFFFFFB2]'
-                                                        )}
-                                                        variant={chosenKeywords.some((c) => c.id === kw.id) ? 'ghost' : 'outline'}
-                                                        onClick={() => {
-                                                            if (chosenKeywords.some((c) => c.id === kw.id)) return;
-                                                            if (chosenKeywords.length >= 8) {
-                                                                toast.info("Limit of keywords select reached", { toastId: 'limit-accseed' });
-                                                                return;
-                                                            }
-                                                            handleAddKeyword(kw);
-                                                        }}
-                                                    >
-                                                        {chosenKeywords.some((c) => c.id === kw.id) ? 'Added' : 'Add'}
-                                                    </Button>
-
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                <div className='text-sm text-[#FFFFFFB2] py-4 border-b border-[#FFFFFF1A]'>
-                                    Keywords here are tailored to that industry (AC system, carriers, student tablets, etc.). Click "Add" to send them to your chosen list.
-                                </div>
-                                <div className='flex items-center gap-3 justify-end mt-4'>
-                                    <div className='text-base text-[#FFFFFFB2]'>Missing something?</div>
-                                    <button className='gradient-border  rounded-xl h-10 px-5 hover:opacity-80 duration-300'>Request keyword</button>
-                                </div>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                        <div className='text-sm text-[#FFFFFFB2] py-4 border-b border-[#FFFFFF1A]'>
+                                            Keywords here are tailored to that industry (AC system, carriers, student tablets, etc.). Click "Add" to send them to your chosen list.
+                                        </div>
+                                        <div className='flex items-center gap-3 justify-end mt-4'>
+                                            <div className='text-base text-[#FFFFFFB2]'>Missing something?</div>
+                                            <button className='gradient-border  rounded-xl h-10 px-5 hover:opacity-80 duration-300'>Request keyword</button>
+                                        </div>
+                                    </>
+                                }
                             </Panel>
                         </div>
 
@@ -427,21 +438,24 @@ const IndustrySetupPage: React.FC = () => {
                                         {chosenKeywords.length === 0 && (
                                             <div className="text-sm text-[#FFFFFFB2]">No keywords selected yet.</div>
                                         )}
+                                        {showSkeleton ? (
+                                            Array.from({ length: 8 }).map((_, i) => <ShimmerWave key={`shim3-${i}`}/>)
+                                        ) :
+                                            chosenKeywords.map((k: any) => (
+                                                <div key={k.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#FFFFFF1A]">
+                                                    <div className="min-w-0">
+                                                        <div className="text-sm truncate">{k?.keyword}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <Tag small className={clsx('!py-0 h-6', k?.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{k?.intent_level}</Tag>
+                                                        <button type='button'
+                                                            onClick={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }}
+                                                            className="px-4 rounded-full font-medium hover:opacity-80 duration-300 border border-[#F14190] bg-transparent text-sm text-white !py-0 h-6 min-w-[60px] text-[10px]">Remove</button>
 
-                                        {chosenKeywords.map((k: any) => (
-                                            <div key={k.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#FFFFFF1A]">
-                                                <div className="min-w-0">
-                                                    <div className="text-sm truncate">{k?.keyword}</div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <Tag small className={clsx('!py-0 h-6', k?.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{k?.intent_level}</Tag>
-                                                    <button type='button'
-                                                        onClick={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }}
-                                                        className="px-4 rounded-full font-medium hover:opacity-80 duration-300 border border-[#F14190] bg-transparent text-sm text-white !py-0 h-6 min-w-[60px] text-[10px]">Remove</button>
-
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))
+                                        }
                                     </div>
                                 </div>
                             </Panel>
@@ -508,27 +522,30 @@ const IndustrySetupPage: React.FC = () => {
 
                     <div className="lg:col-span-4 mt-2">
                         <Panel title={`Selected Competitors (${selectedCompetitors.length}/3)`} subtitle="VelocityIQ will pull details from these websites when generating ProposalIQ analysis.">
-                            <div className="space-y-3">
-                                {competitorData?.results?.data?.competitors.length === 0 && <div className="text-sm text-[#9CA0A6]">No competitors selected.</div>}
-                                {competitorData?.results?.data?.competitors.map((c) => (
-                                    <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-[#FFFFFF1A]">
-                                        <div>
-                                            <div className="font-medium">{c.competitor_name}</div>
-                                            <div className='flex items-center gap-2 mt-1'>
-                                                <div className="text-[10px] text-[#FFFFFFB2] bg-[#1B1A25] rounded-full w-fit px-3 py-1">{c.competitor_location}</div>
-                                                <Link to={c.competitor_website} target='_blank' className="text-[10px] text-[#FFFFFFB2] bg-[#08080C] rounded-full w-fit px-3 py-1">{c.competitor_website}</Link>
+                            {showSkeleton ? (
+                                Array.from({ length: 3 }).map((_, i) => <ShimmerWave key={`shim4-${i}`}/>)
+                            ) :
+                                <div className="space-y-3">
+                                    {competitorData?.results?.data?.competitors.length === 0 && <div className="text-sm text-[#9CA0A6]">No competitors selected.</div>}
+                                    {competitorData?.results?.data?.competitors.map((c:any) => (
+                                        <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-[#FFFFFF1A]">
+                                            <div>
+                                                <div className="font-medium">{c.competitor_name}</div>
+                                                <div className='flex items-center gap-2 mt-1'>
+                                                    <div className="text-[10px] text-[#FFFFFFB2] bg-[#1B1A25] rounded-full w-fit px-3 py-1">{c.competitor_location}</div>
+                                                    <Link to={c.competitor_website} target='_blank' className="text-[10px] text-[#FFFFFFB2] bg-[#08080C] rounded-full w-fit px-3 py-1">{c.competitor_website}</Link>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className='flex items-center gap-3'>
-                                            <button onClick={() => (setCompetitorEditModal(c))}> <Icon name='edit' /></button>
-                                            <button onClick={() => setDeleteItem(c?.id)}> <Icon name='trash' /></button>
-                                            {/* <Button variant='outline' onClick={() => handleRemoveCompetitor(c.id)}>
+                                            <div className='flex items-center gap-3'>
+                                                <button onClick={() => (setCompetitorEditModal(c))}> <Icon name='edit' /></button>
+                                                <button onClick={() => setDeleteItem(c?.id)}> <Icon name='trash' /></button>
+                                                {/* <Button variant='outline' onClick={() => handleRemoveCompetitor(c.id)}>
                                                
                                             </Button> */}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>}
                         </Panel>
                     </div>
                 </div>

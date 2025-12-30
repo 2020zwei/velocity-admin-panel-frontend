@@ -115,7 +115,7 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
           const payload = transformRef.current ? transformRef.current(res.data) : res.data;
 
           if (["post", "patch", "delete"].includes(method.toLowerCase().trim())) {
-            if (requestUrl === "/signin/") {
+            if (requestUrl === "/admin/signin/") {
               Cookies.set("access_token", res.data?.data?.access_token, {
                 expires: 7,
                 secure: import.meta.env.PROD,

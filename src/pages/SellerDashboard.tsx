@@ -3,6 +3,7 @@ import DeleteModal from "@/components/DeleteModal";
 import Pagination from "@/components/Pagination";
 import Spinner from "@/components/Spinner";
 import TableActions from "@/components/TableActions";
+import { ShimmerRow } from "@/components/TableShimmerRow";
 import { useApi } from "@/hooks/useApi";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -13,7 +14,7 @@ function SellerDashboard() {
   const [deleteItem, setDeleteItem] = useState<any>("");
   const navigate = useNavigate();
   const page = search.slice(search.lastIndexOf("=") + 1)
-  const { data, isLoading, refetch: callApi,isRefetching } = useApi({
+  const { data, isLoading, refetch: callApi, isRefetching } = useApi({
     url: `/admin/sales-reps?page=${page ? page : 1}&&page_size=20`,
     auto: true,
     transformResponse: (d) => d
@@ -31,9 +32,12 @@ function SellerDashboard() {
     setDeleteItem('')
   }
 
-  if (isLoading&&!isRefetching) {
-    return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
-  }
+  const showSkeleton = isLoading || isRefetching;
+
+
+  // if (isLoading && !isRefetching) {
+  //   return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
+  // }
   const sales_reps: any[] = data?.results?.data?.sales_reps ?? []
   const totalPages = Math.ceil(data?.count / 20)
   return (
@@ -46,7 +50,8 @@ function SellerDashboard() {
               + Add Seller
             </Button>
           </div>
-          {(!sales_reps?.length) ? <div className="text-center text-lg">Seles reps not found</div> : <>
+           {!isLoading &&!sales_reps&&<div className="text-center bg-black-800 py-4 rounded-xl">Reps not found</div>}
+          <>
             <div
               className="w-full overflow-x-auto rounded-md bg-black-900/40"
               style={{ WebkitOverflowScrolling: "touch" }}
@@ -62,6 +67,28 @@ function SellerDashboard() {
                 </thead>
 
                 <tbody>
+                  {showSkeleton ? (
+                    Array.from({ length: 8 }).map((_, i) => <ShimmerRow key={i} />)
+                  ) : (
+                    sales_reps.map((item) => (
+                      <tr key={item.id} className="even:bg-black-800/60 text-white">
+                        <td className="px-4 sm:px-6 py-3 whitespace-nowrap capitalize">{item.name}</td>
+                        <td className="px-4 sm:px-6 py-3 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
+                          {item.email}
+                        </td>
+                        <td className="px-4 sm:px-6 py-3 whitespace-nowrap capitalize">{item.territory_state}</td>
+                        <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-4">
+                            <TableActions item={item} onClick={handleAction} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+
+
+                {/* <tbody>
                   {sales_reps.map((item) => (
                     <tr key={item.id} className="even:bg-black-800/60 text-white">
                       <td className="px-4 sm:px-6 py-3 whitespace-nowrap capitalize">{item.name}</td>
@@ -76,7 +103,8 @@ function SellerDashboard() {
                       </td>
                     </tr>
                   ))}
-                </tbody>
+                </tbody> */}
+
               </table>
             </div>
             {totalPages > 1 &&
@@ -85,10 +113,10 @@ function SellerDashboard() {
               </div>
             }
           </>
-          }
+         
         </section>
       </div>
-     {!isLoading&&isRefetching&&<div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>}
+      {/* {!isLoading && isRefetching && <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>} */}
 
       <DeleteModal url="sales-reps" isOpen={deleteItem} onClose={() => setDeleteItem("")} onConfirm={onConfirm} />
     </>
