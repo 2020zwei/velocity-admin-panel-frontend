@@ -36,7 +36,7 @@ const AddApproverModal: React.FC<AddApproverModalProps> = ({
 }) => {
 
   const { isLoading, refetch: update,isRefetching } = useApi<{ results: unknown[] }>({
-    url: `/approvers/${isOpen?.id ?? ''}`,
+    url: `/admin/approvers/${isOpen?.id ?? ''}`,
     method: isOpen?.id ? "patch" : "post",
     auto: false,
     transformResponse: (d) => d,
