@@ -104,7 +104,7 @@ const UploadDocument = () => {
     const [isDragging, setIsDragging] = useState(false)
 
     const { isLoading, refetch: upload } = useApi<{ results: any[] }>({
-        url: "/sales-reps/invite/csv/",
+        url: "/admin/sales-reps/invite/csv/",
         method: "post",
         auto: false,
         headers: {},

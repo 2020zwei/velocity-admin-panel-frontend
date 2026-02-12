@@ -118,7 +118,7 @@ function SellerDashboard() {
       </div>
       {/* {!isLoading && isRefetching && <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>} */}
 
-      <DeleteModal url="sales-reps" isOpen={deleteItem} onClose={() => setDeleteItem("")} onConfirm={onConfirm} />
+      <DeleteModal url="admin/sales-reps" isOpen={deleteItem} onClose={() => setDeleteItem("")} onConfirm={onConfirm} />
     </>
   );
 }
