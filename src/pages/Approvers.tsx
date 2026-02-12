@@ -1,4 +1,3 @@
-
 import AddApproverModal from "@/components/AddApproverModal";
 import { Button } from "@/components/Button";
 import DeleteModal from "@/components/DeleteModal";
@@ -7,14 +6,18 @@ import Spinner from "@/components/Spinner";
 import TableActions from "@/components/TableActions";
 import { ShimmerRow } from "@/components/TableShimmerRow";
 import { useApi } from "@/hooks/useApi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import axiosInstance from "@/api";
+import { toast } from "react-toastify";
 
 
 function Approvers() {
     const { search } = useLocation()
     const [deleteItem, setDeleteItem] = useState<any>(0);
     const [isApproverModal, setIsApproverModal] = useState<any>("");
+    const [needApproval, setNeedApproval] = useState<boolean>(true);
+    const [approvalSettingLoading, setApprovalSettingLoading] = useState(false);
     const page = search.slice(search.lastIndexOf("=") + 1)
     const { data: apvData, isLoading, refetch, isRefetching } = useApi({
         url: `/admin/approvers?page=${page ? page : 1}&&page_size=20`,
@@ -22,6 +25,31 @@ function Approvers() {
         method: "get",
         transformResponse: (d) => d
     });
+
+    const { data: approvalSettingData } = useApi({
+        url: "/admin/approval-setting/",
+        auto: true,
+        method: "get",
+        transformResponse: (d) => d,
+    });
+
+    useEffect(() => {
+        if (approvalSettingData?.need_approval !== undefined) {
+            setNeedApproval(Boolean(approvalSettingData.need_approval));
+        }
+    }, [approvalSettingData]);
+
+    const saveApprovalSetting = async () => {
+        setApprovalSettingLoading(true);
+        try {
+            await axiosInstance.patch("/admin/approval-setting/", { need_approval: needApproval });
+            toast.success("Approval setting updated");
+        } catch {
+            // toast handled by axios interceptor
+        } finally {
+            setApprovalSettingLoading(false);
+        }
+    };
 
 
     const handleAction = (item: any, type: string) => {
@@ -58,6 +86,48 @@ function Approvers() {
                             + Add Approver
                         </Button>
                     </div>
+
+                    <div className="mb-6 p-4 rounded-lg bg-black-800/60 border border-[#151623]">
+                        <p className="text-sm font-medium text-slate-200 mb-3">Does all proposal require approval?</p>
+                        <div className="flex flex-wrap items-center gap-6">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={needApproval === true}
+                                    onChange={() => setNeedApproval(true)}
+                                    disabled={approvalSettingLoading}
+                                    className="w-4 h-4 rounded border-slate-500 bg-black-800 text-[#D4368E] focus:ring-[#D4368E]"
+                                />
+                                <span className="te xt-slate-200">Yes</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={needApproval === false}
+                                    onChange={() => setNeedApproval(false)}
+                                    disabled={approvalSettingLoading}
+                                    className="w-4 h-4 rounded border-slate-500 bg-black-800 text-[#D4368E] focus:ring-[#D4368E]"
+                                />
+                                <span className="text-slate-200">No</span>
+                            </label>
+                        </div>
+                        {needApproval === false && (
+                            <p className="mt-3 text-xs text-slate-400 italic">
+                                Note: Proposals with promotions will require approval even if &quot;No&quot; is selected.
+                            </p>
+                        )}
+                        <div className="mt-4">
+                            <Button
+                                onClick={saveApprovalSetting}
+                                disabled={approvalSettingLoading}
+                                isLoading={approvalSettingLoading}
+                                // className="p-1 w-16"
+                            >
+                                Save
+                            </Button>
+                        </div>
+                    </div>
+
                     {!isLoading && !approvers && <div className="text-center bg-black-800 py-4 rounded-xl">Reps not found</div>}
                     <>
                         <div
