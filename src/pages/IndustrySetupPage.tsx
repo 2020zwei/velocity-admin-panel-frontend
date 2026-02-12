@@ -564,7 +564,7 @@ const IndustrySetupPage: React.FC = () => {
                 confirmLoading={cLoading}
             />}
             <DeleteModal
-                url="competitors"
+                url="admin/competitors"
                 isOpen={deleteItem}
                 onClose={() => setDeleteItem(false)}
                 onConfirm={onDeleteConfirm}

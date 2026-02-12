@@ -209,7 +209,7 @@ function Approvers() {
                 </section>
             </div>
             <DeleteModal
-                url="approvers"
+                url="admin/approvers"
                 isOpen={deleteItem}
                 onClose={() => setDeleteItem(false)}
                 onConfirm={onDeleteConfirm}

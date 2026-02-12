@@ -75,7 +75,7 @@ const AddSeller = () => {
     // });
 
     const { isLoading, refetch: callApi } = useApi<{ results: any[] }>({
-        url: editId ? `/sales-reps/${editId}` : "/sales-reps/invite/",
+        url: editId ? `/admin/sales-reps/${editId}` : "/admin/sales-reps/invite/",
         method: state?.id ? "patch" : "post",
         auto: false,
         transformResponse: (d) => d,
@@ -113,7 +113,7 @@ const AddSeller = () => {
 
             try {
                 const res = await refetchApprovers({
-                    url: "/approvers",
+                    url: "/admin/approvers",
                     params: {
                         page,
                         limit: PAGE_SIZE,
