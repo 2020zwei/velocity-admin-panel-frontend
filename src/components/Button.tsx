@@ -1,13 +1,15 @@
-// src/components/ui/PrimaryButton.tsx
-import clsx from "clsx";
 import * as React from "react";
+import Spinner from "./Spinner";
+import {twMerge} from "tailwind-merge"
 
 type PrimaryButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
 interface ButtonProps extends PrimaryButtonProps {
     bgClass?: string;
+    isLoading?: boolean,
+    spinnerSize?:number
 }
 
-export function Button({ className, children, onClick, bgClass='bg-blue-gradient', ...props }: ButtonProps) {
+export function Button({ className, children, onClick, bgClass = 'bg-blue-gradient', isLoading = false,spinnerSize=32, ...props }: ButtonProps) {
     const btnRef = React.useRef<HTMLButtonElement | null>(null);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -44,9 +46,10 @@ export function Button({ className, children, onClick, bgClass='bg-blue-gradient
         <button
             ref={btnRef}
             {...props}
+            disabled={isLoading}
             onClick={handleClick}
-            className={clsx(
-                "relative overflow-hidden  flex items-center justify-center min-w-[146px] px-3 py-[11px] rounded-md text-sm font-semibold shadow-lg",
+            className={twMerge(
+                "relative overflow-hidden  flex items-center justify-center h-11 min-w-[146px] px-3 py-[11px] rounded-md text-sm font-semibold shadow-lg",
                 "transition-all duration-150 ease-out",
                 "hover:shadow-xl hover:-translate-y-0.5 hover:brightness-110",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500",
@@ -55,7 +58,8 @@ export function Button({ className, children, onClick, bgClass='bg-blue-gradient
                 bgClass
             )}
         >
-            {children}
+            {isLoading ? <Spinner size={20}/> : children}
+
         </button>
     );
 }

@@ -56,3 +56,73 @@
 .dark-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #5a5a7a;
 }
+
+
+/* Tailwind projects: put this AFTER @tailwind base; or inside @layer base */
+@layer base {
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    /* match your dark input bg */
+    -webkit-box-shadow: 0 0 0 1000px #09090E inset;
+    box-shadow: 0 0 0 1000px #09090E inset;
+    -webkit-text-fill-color: #ffffff;
+    /* text color in dark mode */
+    caret-color: #ffffff;
+  }
+
+  /* Firefox */
+  input:-moz-autofill,
+  textarea:-moz-autofill,
+  select:-moz-autofill {
+    box-shadow: 0 0 0 1000px #09090E inset;
+    -moz-text-fill-color: #ffffff;
+    caret-color: #ffffff;
+  }
+
+  .active-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    /* Transparent background */
+    filter: blur(2px);
+    /* Added unit */
+    z-index: 0;
+    /* Adjust if needed */
+  }
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 12px;
+  background: #0B0B0E;
+  
+}
+
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  /* border thickness */
+  border-radius: 12px;
+  background: linear-gradient(123.22deg, #D4368E 15.32%, #9333C8 85.26%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
