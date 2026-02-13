@@ -34,8 +34,9 @@ function Approvers() {
     });
 
     useEffect(() => {
-        if (approvalSettingData?.need_approval !== undefined) {
-            setNeedApproval(Boolean(approvalSettingData.need_approval));
+        const needApprovalFromApi = approvalSettingData?.data?.need_approval;
+        if (needApprovalFromApi !== undefined) {
+            setNeedApproval(Boolean(needApprovalFromApi));
         }
     }, [approvalSettingData]);
 
@@ -98,7 +99,7 @@ function Approvers() {
                                     disabled={approvalSettingLoading}
                                     className="w-4 h-4 rounded border-slate-500 bg-black-800 text-[#D4368E] focus:ring-[#D4368E]"
                                 />
-                                <span className="te xt-slate-200">Yes</span>
+                                <span className="text-slate-200">Yes</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer select-none">
                                 <input
