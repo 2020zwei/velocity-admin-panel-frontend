@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useApi } from "@/hooks/useApi";
 import { Button } from "@/components/Button";
 import Spinner from "@/components/Spinner";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Icon from "@/components/Icon";
 
@@ -54,13 +54,25 @@ const Login = () => {
         }
     };
 
+    const nonFieldErrors = error?.response?.data?.errors?.non_field_errors;
+    const apiErrorMessage =
+        error?.response?.data?.message ||
+        (Array.isArray(nonFieldErrors) ? nonFieldErrors.join(", ") : nonFieldErrors) ||
+        error?.response?.data?.error_message ||
+        error?.message;
+
     return (
         <div className="text-sm text-gray-200 text-center w-full flex justify-center items-center min-h-screen">
             <form
                 onSubmit={handleSubmit(onSubmit)}
                 className="flex-1 pt-6 max-w-[500px]"
             >
-                <div>
+                <div className="text-center ">
+                    <img
+                        src="/logo.png"
+                        alt="Admin panel logo"
+                        className="h-12 w-auto mb-16 mx-auto"
+                    />
                     <h1 className="text-2xl text-start font-semibold">Welcome to admin panel</h1>
                 </div>
                 <div className="flex flex-col gap-2 w-full text-start mt-5">
@@ -115,8 +127,15 @@ const Login = () => {
                     </Button>
                 </div>
 
-                {error && (
-                    <p className="mt-3 text-sm text-red-400">Server error: {String(error?.message ?? error)}</p>
+                <p className="mt-5 text-center text-sm text-gray-300">
+                    Don&apos;t have an account?{" "}
+                    <Link to="/signup" className="text-[#EE2B93] font-medium hover:opacity-90">
+                        Sign up
+                    </Link>
+                </p>
+
+                {error && apiErrorMessage && (
+                    <p className="mt-3 text-sm text-red-400">{String(apiErrorMessage)}</p>
                 )}
             </form>
         </div>
