@@ -1,6 +1,5 @@
 import axiosInstance from "@/api";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 
 export type HttpMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -122,7 +121,6 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
                 sameSite: "strict",
               });
             }
-            toast.success(res?.data?.message, { toastId: "succes-toast" });
           }
 
           setData(payload);
@@ -140,14 +138,6 @@ export function useApi<T = any, P = any, B = any>(opts: UseApiOptions<P, B>) {
             
 
           if (canceled) return Promise.reject({ canceled: true });
-          if (err?.code === "ERR_NETWORK") {
-            toast.error(err?.message, { toastId: "network-error" })
-          }
-          if (err?.code !== "ERR_NETWORK") {
-            toast.error((err?.response?.data?.message) || "Something went wrong", {
-              toastId: "toast-error",
-            });
-          }
 
           setError(err);
           hasFetchedOnceRef.current = true;

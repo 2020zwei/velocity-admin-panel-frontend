@@ -3,7 +3,6 @@ import React, { useEffect, useState, type ChangeEvent } from 'react';
 import { Button as CustomButton } from "@/components/Button";
 import { useApi } from '@/hooks/useApi';
 import Spinner from '@/components/Spinner';
-import { toast } from 'react-toastify';
 import Icon from '@/components/Icon';
 import CompetirorForm, { type FormValues } from '@/components/CompetirorForm';
 import EditCompititorModal from '@/components/EditCompititorModal';
@@ -404,7 +403,6 @@ const IndustrySetupPage: React.FC = () => {
                                                                 onClick={() => {
                                                                     if (chosenKeywords.some((c) => c.id === kw.id)) return;
                                                                     if (chosenKeywords.length >= 8) {
-                                                                        toast.info("Limit of keywords select reached", { toastId: 'limit-accseed' });
                                                                         return;
                                                                     }
                                                                     handleAddKeyword(kw);
@@ -574,5 +572,4 @@ const IndustrySetupPage: React.FC = () => {
 };
 
 export default IndustrySetupPage;
-
 

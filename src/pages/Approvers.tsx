@@ -9,7 +9,6 @@ import { useApi } from "@/hooks/useApi";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axiosInstance from "@/api";
-import { toast } from "react-toastify";
 
 
 function Approvers() {
@@ -44,9 +43,8 @@ function Approvers() {
         setApprovalSettingLoading(true);
         try {
             await axiosInstance.patch("/admin/approval-setting/", { need_approval: needApproval });
-            toast.success("Approval setting updated");
         } catch {
-            // toast handled by axios interceptor
+            // error handled by axios interceptor
         } finally {
             setApprovalSettingLoading(false);
         }
