@@ -40,6 +40,32 @@ const extractApprovers = (res: any) => res?.results?.data?.approvers ?? [];
 const extractCount = (res: any) =>
     res?.count ?? res?.results?.count ?? res?.results?.data?.count ?? 0;
 
+const parseZipCodes = (value: string): string[] => {
+    const matches = String(value || "").match(/\b\d{5}(?:-\d{4})?\b/g) ?? [];
+    return Array.from(new Set(matches));
+};
+
+const parseCsvList = (value: string): string[] =>
+    Array.from(
+        new Set(
+            String(value || "")
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean)
+        )
+    );
+
+const resolveStateCode = (token: string, options: Option[]): string | null => {
+    const normalized = token.trim().toLowerCase();
+    if (!normalized) return null;
+    const byCode = options.find((o) => String(o.value).toLowerCase() === normalized);
+    if (byCode) return String(byCode.value);
+    const byName = options.find((o) => o.label.toLowerCase() === normalized);
+    if (byName) return String(byName.value);
+    if (normalized.length === 2) return normalized.toUpperCase();
+    return null;
+};
+
 const getReadableApiMessage = (err: any): string => {
     const raw =
         err?.response?.data?.message ??
@@ -67,6 +93,10 @@ const AddSeller = () => {
     const { state, search } = useLocation();
     const [states, setStates] = useState<Option[]>([]);
     const [showZipPicker, setShowZipPicker] = useState(false);
+    const [showStatePicker, setShowStatePicker] = useState(false);
+    const [stateSearch, setStateSearch] = useState("");
+    const [zipSearch, setZipSearch] = useState("");
+    const [pendingZipCodes, setPendingZipCodes] = useState<string[]>([]);
     const [submitError, setSubmitError] = useState("");
     // ✅ Approvers
     const [approverOptions, setApproverOptions] = useState<Option[]>([]);
@@ -330,41 +360,84 @@ const AddSeller = () => {
         void GetStatesList();
     }, []);
 
-    const selectedStateCode = watch("territory_state");
-    const selectedZipCode = watch("zip_code");
-    const stateZipRecords = useMemo(() => {
-        if (!selectedStateCode) return [];
-        const items = zipcodes.lookupByState(String(selectedStateCode).toUpperCase()) ?? [];
-        const map = new Map<string, { zip: string; city?: string; state?: string }>();
-        items.forEach((item: any) => {
-            const zip = String(item?.zip ?? "").trim();
-            if (!zip) return;
-            if (!map.has(zip)) {
-                map.set(zip, {
-                    zip,
-                    city: item?.city,
-                    state: item?.state,
-                });
-            }
-        });
-        return Array.from(map.values());
-    }, [selectedStateCode, selectedZipCode]);
+    const territoryStateRaw = watch("territory_state");
+    const zipCodeRaw = watch("zip_code");
 
-    const filteredStateZipRecords = useMemo(() => {
-        const q = showZipPicker && String(selectedZipCode ?? "").trim().length < 5
-            ? String(selectedZipCode ?? "").trim().toLowerCase()
-            : "";
-        if (!q) return stateZipRecords;
-        return stateZipRecords.filter(
-            (item) =>
-                item.zip.includes(q) ||
-                String(item.city ?? "").toLowerCase().includes(q)
+    const selectedStateCodes = useMemo(() => {
+        const tokens = parseCsvList(territoryStateRaw);
+        return Array.from(
+            new Set(
+                tokens
+                    .map((token) => resolveStateCode(token, states))
+                    .filter(Boolean) as string[]
+            )
         );
-    }, [stateZipRecords, selectedZipCode]);
+    }, [territoryStateRaw, states]);
 
-    const selectedZipMeta = useMemo(() => {
-        return stateZipRecords.find((item) => item.zip === selectedZipCode);
-    }, [stateZipRecords, selectedZipCode]);
+    const selectedZipCodes = useMemo(() => parseZipCodes(zipCodeRaw), [zipCodeRaw]);
+
+    const stateZipRecordsByState = useMemo(() => {
+        const grouped: Record<string, Array<{ zip: string; city?: string; state?: string }>> = {};
+        selectedStateCodes.forEach((code) => {
+            const items = zipcodes.lookupByState(String(code).toUpperCase()) ?? [];
+            const map = new Map<string, { zip: string; city?: string; state?: string }>();
+            items.forEach((item: any) => {
+                const zip = String(item?.zip ?? "").trim();
+                if (!zip) return;
+                if (!map.has(zip)) {
+                    map.set(zip, { zip, city: item?.city, state: item?.state });
+                }
+            });
+            grouped[code] = Array.from(map.values());
+        });
+        return grouped;
+    }, [selectedStateCodes]);
+
+    const validZipSet = useMemo(() => {
+        const set = new Set<string>();
+        Object.values(stateZipRecordsByState).forEach((records) => {
+            records.forEach((r) => set.add(r.zip));
+        });
+        return set;
+    }, [stateZipRecordsByState]);
+
+    useEffect(() => {
+        const filtered = selectedZipCodes.filter((z) => validZipSet.has(z));
+        if (filtered.length !== selectedZipCodes.length) {
+            setValue("zip_code", filtered.join(", "), { shouldValidate: true, shouldDirty: true });
+            setPendingZipCodes(filtered);
+        }
+    }, [selectedZipCodes, validZipSet, setValue]);
+
+    const filteredStates = useMemo(() => {
+        const q = stateSearch.trim().toLowerCase();
+        if (!q) return states;
+        return states.filter(
+            (s) =>
+                s.label.toLowerCase().includes(q) ||
+                String(s.value).toLowerCase().includes(q)
+        );
+    }, [states, stateSearch]);
+
+    const filteredStateZipRecordsByState = useMemo(() => {
+        const q = zipSearch.trim().toLowerCase();
+        if (!q) return stateZipRecordsByState;
+        const grouped: Record<string, Array<{ zip: string; city?: string; state?: string }>> = {};
+        Object.entries(stateZipRecordsByState).forEach(([code, records]) => {
+            const next = records.filter(
+                (item) =>
+                    item.zip.includes(q) ||
+                    String(item.city ?? "").toLowerCase().includes(q)
+            );
+            if (next.length) grouped[code] = next;
+        });
+        return grouped;
+    }, [stateZipRecordsByState, zipSearch]);
+
+    const visibleSelectedZipCodes = useMemo(
+        () => (showZipPicker ? pendingZipCodes : selectedZipCodes),
+        [showZipPicker, pendingZipCodes, selectedZipCodes]
+    );
 
     if (approverLoading && !approverRefetching) {
         return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
@@ -462,108 +535,233 @@ const AddSeller = () => {
                                         )}
                                     </div>
 
-                                    <div className="flex flex-col gap-2 flex-1">
+                                   
+                                </div>
+                                 <div className="flex flex-col gap-2 flex-1">
                                         <label className="font-medium text-base">
                                             Territory- State <span className="text-[#EE2B93] ps-1">*</span>
                                         </label>
-
-                                        <Controller
-                                            name="territory_state"
-                                            control={control}
-                                            render={({ field }) => (
-                                                <Dropdown
-                                                    options={states}
-                                                    isSearch={true}
-                                                    value={states.find((s) => s.value === field.value)}
-                                                    onSelect={(item) => {
-                                                        if (!Array.isArray(item)) {
-                                                            field.onChange(item.value);
-                                                            setShowZipPicker(true);
-                                                            setValue("zip_code", "", { shouldValidate: true, shouldDirty: true });
-                                                            clearErrors("zip_code");
-                                                        }
-                                                    }}
-                                                    placeholder="Select territory"
-                                                    classNames={{
-                                                        trigger: "!bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]",
-                                                        selectedOption: "bg-blue-gradient",
-                                                    }}
-                                                />
+                                        <div className="bg-[#09090E] rounded-xl px-3 py-3 border border-[#FFFFFF1A] space-y-3">
+                                            {selectedStateCodes.length > 0 && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedStateCodes.map((code) => {
+                                                        const stateObj = states.find((s) => String(s.value) === code);
+                                                        return (
+                                                            <button
+                                                                key={code}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const next = selectedStateCodes.filter((s) => s !== code);
+                                                                    setValue("territory_state", next.join(", "), { shouldValidate: true, shouldDirty: true });
+                                                                    clearErrors("territory_state");
+                                                                    setShowZipPicker(true);
+                                                                }}
+                                                                className="h-8 px-3 rounded-full border border-[#2E6DFF] bg-[#13213D] text-[#BFD5FF] text-xs flex items-center gap-2"
+                                                            >
+                                                                <span>{stateObj?.label ?? code}</span>
+                                                                <span className="text-white/80">x</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
                                             )}
-                                        />
+                                            <input
+                                                type="text"
+                                                value={stateSearch}
+                                                onFocus={() => setShowStatePicker(true)}
+                                                onChange={(e) => {
+                                                    setStateSearch(e.target.value);
+                                                    setShowStatePicker(true);
+                                                }}
+                                                placeholder="Search and select states..."
+                                                className="bg-[#0F1118] h-10 rounded-lg px-3 border border-[#FFFFFF1A] text-sm w-full"
+                                            />
+                                            {showStatePicker && (
+                                                <div className="max-h-48 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 pr-1">
+                                                    {filteredStates.map((item) => {
+                                                        const code = String(item.value);
+                                                        const isSelected = selectedStateCodes.includes(code);
+                                                        return (
+                                                            <button
+                                                                key={code}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const next = isSelected
+                                                                        ? selectedStateCodes.filter((s) => s !== code)
+                                                                        : [...selectedStateCodes, code];
+                                                                    setValue("territory_state", Array.from(new Set(next)).join(", "), { shouldValidate: true, shouldDirty: true });
+                                                                    clearErrors("territory_state");
+                                                                    setShowZipPicker(true);
+                                                                }}
+                                                                className={clsx(
+                                                                    "h-10 px-3 rounded-lg border text-sm flex items-center justify-between",
+                                                                    isSelected
+                                                                        ? "border-[#00C950] bg-[#0D2A1A] text-[#9CF5C2]"
+                                                                        : "border-[#FFFFFF2E] text-white hover:border-[#FFFFFF80]"
+                                                                )}
+                                                            >
+                                                                <span className="truncate">{item.label}</span>
+                                                                <span className="text-xs opacity-80">{code}</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
 
                                         {errors.territory_state && (
                                             <p className="text-xs text-red-500 mt-1">{errors.territory_state.message}</p>
                                         )}
                                     </div>
-                                </div>
 
                                 <div className="flex flex-col gap-2">
                                     <label className="font-medium text-base">
                                         Zip Code <span className="text-[#EE2B93] ps-1">*</span>
                                     </label>
-                                    <Controller
-                                        name="zip_code"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <div className="bg-[#09090E] rounded-xl px-3 py-3 border border-[#FFFFFF1A]">
-                                                {!selectedStateCode ? (
-                                                    <div className="text-sm text-[#FFFFFF99]">Select territory state first</div>
-                                                ) : stateZipRecords.length ? (
+                                    <div className="bg-[#09090E] rounded-xl px-3 py-3 border border-[#FFFFFF1A]">
+                                        {!selectedStateCodes.length ? (
+                                            <div className="text-sm text-[#FFFFFF99]">Select at least one state first</div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {visibleSelectedZipCodes.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {visibleSelectedZipCodes.map((zip) => (
+                                                            <button
+                                                                key={zip}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const next = visibleSelectedZipCodes.filter((z) => z !== zip);
+                                                                    setPendingZipCodes(next);
+                                                                    setValue("zip_code", next.join(", "), { shouldValidate: true, shouldDirty: true });
+                                                                    clearErrors("zip_code");
+                                                                }}
+                                                                className="h-8 px-3 rounded-full border border-[#00C950] bg-[#0D2A1A] text-[#9CF5C2] text-xs flex items-center gap-2"
+                                                            >
+                                                                <span>{zip}</span>
+                                                                <span className="text-white/80">x</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                <input
+                                                    type="text"
+                                                    value={zipCodeRaw ?? ""}
+                                                    onFocus={() => {
+                                                        setPendingZipCodes(parseZipCodes(String(zipCodeRaw ?? "")));
+                                                        setShowZipPicker(true);
+                                                    }}
+                                                    onChange={(e) => {
+                                                        const cleaned = e.target.value.replace(/[^\d,\s-]/g, "").slice(0, 500);
+                                                        setValue("zip_code", cleaned, { shouldValidate: true, shouldDirty: true });
+                                                        setPendingZipCodes(parseZipCodes(cleaned));
+                                                        clearErrors("zip_code");
+                                                        setShowZipPicker(true);
+                                                    }}
+                                                    placeholder="Selected ZIPs..."
+                                                    className="bg-[#0F1118] h-10 rounded-lg px-3 border border-[#FFFFFF1A] text-sm w-full"
+                                                />
+                                                {showZipPicker && (
                                                     <div className="space-y-3">
                                                         <input
                                                             type="text"
-                                                            value={field.value ?? ""}
-                                                            onFocus={() => setShowZipPicker(true)}
-                                                            onChange={(e) => {
-                                                                const cleaned = e.target.value.replace(/[^\d-]/g, "").slice(0, 10);
-                                                                field.onChange(cleaned);
-                                                                clearErrors("zip_code");
-                                                                setShowZipPicker(cleaned.length < 5);
-                                                            }}
-                                                            placeholder={`Search ZIP in ${String(selectedStateCode).toUpperCase()}...`}
+                                                            value={zipSearch}
+                                                            onChange={(e) => setZipSearch(e.target.value.replace(/[^\d\sA-Za-z-]/g, ""))}
+                                                            placeholder="Search ZIP by code or city..."
                                                             className="bg-[#0F1118] h-10 rounded-lg px-3 border border-[#FFFFFF1A] text-sm w-full"
                                                         />
-                                                        {selectedZipMeta && (
-                                                            <div className="text-xs text-[#FFFFFFA3]">
-                                                                {selectedZipMeta.zip} - {selectedZipMeta.city}, {selectedZipMeta.state}
-                                                            </div>
-                                                        )}
-                                                        {showZipPicker && (
-                                                            <div className="max-h-56 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 pr-1">
-                                                                {filteredStateZipRecords.map((item) => {
-                                                                    const isSelected = field.value === item.zip;
-                                                                    return (
-                                                                        <button
-                                                                            key={item.zip}
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                field.onChange(item.zip);
-                                                                                clearErrors("zip_code");
-                                                                                setShowZipPicker(false);
-                                                                            }}
-                                                                            className={clsx(
-                                                                                "h-11 rounded-lg px-3 text-sm border duration-300 flex items-center justify-between gap-2",
-                                                                                isSelected
-                                                                                    ? "border-[#00C950] bg-[#0D2A1A] text-[#9CF5C2]"
-                                                                                    : "border-[#FFFFFF2E] text-white hover:border-[#FFFFFF80]"
-                                                                            )}
-                                                                        >
-                                                                            <span>{item.zip}</span>
-                                                                            <span className="text-[11px] text-[#FFFFFFB2] truncate">{item.city}, {item.state}</span>
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        )}
+
+                                                        <div className="max-h-64 overflow-y-auto space-y-4 pr-1">
+                                                            {selectedStateCodes.map((code) => {
+                                                                const records = filteredStateZipRecordsByState[code] ?? [];
+                                                                const stateObj = states.find((s) => String(s.value) === code);
+                                                                if (!records.length) return null;
+                                                                const stateZips = (stateZipRecordsByState[code] ?? []).map((r) => r.zip);
+                                                                const isAllSelected = stateZips.length > 0 && stateZips.every((z) => pendingZipCodes.includes(z));
+
+                                                                return (
+                                                                    <div key={code} className="rounded-xl border border-[#FFFFFF1A] p-3 space-y-3">
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <div className="text-sm font-medium">
+                                                                                {stateObj?.label ?? code}
+                                                                                <span className="text-xs text-[#FFFFFF80] ms-2">({code})</span>
+                                                                                {isAllSelected && (
+                                                                                    <span className="text-[10px] ms-2 px-2 py-0.5 rounded-full border border-[#00C950] text-[#9CF5C2]">Fully selected</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setPendingZipCodes((prev) => {
+                                                                                        if (isAllSelected) {
+                                                                                            const stateSet = new Set(stateZips);
+                                                                                            return prev.filter((z) => !stateSet.has(z));
+                                                                                        }
+                                                                                        return Array.from(new Set([...prev, ...stateZips]));
+                                                                                    });
+                                                                                }}
+                                                                                className="h-8 px-3 rounded-lg border border-[#FFFFFF2E] text-xs hover:border-[#FFFFFF80] duration-300"
+                                                                            >
+                                                                                {isAllSelected ? "Unselect All" : "Select All Zip Codes"}
+                                                                            </button>
+                                                                        </div>
+                                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                            {records.map((item) => {
+                                                                                const isSelected = pendingZipCodes.includes(item.zip);
+                                                                                return (
+                                                                                    <button
+                                                                                        key={`${code}-${item.zip}`}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setPendingZipCodes((prev) =>
+                                                                                                prev.includes(item.zip)
+                                                                                                    ? prev.filter((z) => z !== item.zip)
+                                                                                                    : [...prev, item.zip]
+                                                                                            );
+                                                                                        }}
+                                                                                        className={clsx(
+                                                                                            "h-11 rounded-lg px-3 text-sm border duration-300 flex items-center justify-between gap-2",
+                                                                                            isSelected
+                                                                                                ? "border-[#00C950] bg-[#0D2A1A] text-[#9CF5C2]"
+                                                                                                : "border-[#FFFFFF2E] text-white hover:border-[#FFFFFF80]"
+                                                                                        )}
+                                                                                    >
+                                                                                        <span>{item.zip}</span>
+                                                                                        <span className="text-[11px] text-[#FFFFFFB2] truncate">{item.city}, {item.state}</span>
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        <div className="flex items-center justify-between gap-3">
+                                                            <div className="text-xs text-[#FFFFFFA3]">{pendingZipCodes.length} ZIP selected</div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setValue("zip_code", Array.from(new Set(pendingZipCodes)).join(", "), { shouldValidate: true, shouldDirty: true });
+                                                                    clearErrors("zip_code");
+                                                                    setZipSearch("");
+                                                                    setShowZipPicker(false);
+                                                                }}
+                                                                className={clsx(
+                                                                    "h-9 px-4 rounded-lg text-sm border duration-300",
+                                                                    pendingZipCodes.length
+                                                                        ? "border-[#00C950] bg-[#0D2A1A] text-[#9CF5C2] hover:opacity-80"
+                                                                        : "border-[#FFFFFF2E] text-[#FFFFFF80] cursor-not-allowed"
+                                                                )}
+                                                                disabled={pendingZipCodes.length === 0}
+                                                            >
+                                                                Save Selection
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                ) : (
-                                                    <div className="text-sm text-[#FFFFFF99]">No ZIP codes found for this state</div>
                                                 )}
                                             </div>
                                         )}
-                                    />
-                                    {errors.zip_code && !selectedZipCode && <p className="text-xs text-red-500 mt-1">{errors.zip_code.message}</p>}
+                                    </div>
+                                    {errors.zip_code && selectedZipCodes.length === 0 && <p className="text-xs text-red-500 mt-1">{errors.zip_code.message}</p>}
                                 </div>
                             </div>
 
