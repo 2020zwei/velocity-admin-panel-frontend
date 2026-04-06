@@ -1,11 +1,14 @@
 import React from "react";
 
-const Spinner: React.FC<{ className?: string,size?:number}> = ({ className = "",size=32}) => {
+const Spinner: React.FC<{ className?: string,size?:number}> = ({ className = "",size=72}) => {
   return (
-    <div className={`flex justify-center items-center py-10 ${className}`}>
-      <div className="border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
-      style={{width:size,height:size}}
-      ></div>
+    <div className={`flex justify-center items-center py-16 ${className}`}>
+      <img
+        src="/icon.png"
+        alt="Loading"
+        className="animate-spin [animation-duration:1.8s]"
+        style={{ width: size, height: size }}
+      />
     </div>
   );
 };
