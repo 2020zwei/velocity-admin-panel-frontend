@@ -113,6 +113,9 @@ const IndustrySetupPage: React.FC = () => {
     // setSuggestions
     const [suggestionSearch, setSuggestionSearch] = useState<string>('');
     const [suggestions, setSuggestions] = useState<SuggestedCompetitor[]>([]);
+    const [step1Confirmed, setStep1Confirmed] = useState(false);
+    const [step2Confirmed, setStep2Confirmed] = useState(false);
+    const [step3Confirmed, setStep3Confirmed] = useState(false);
     // end setSuggestions
     // fetch keywords
     const {
@@ -308,155 +311,176 @@ const IndustrySetupPage: React.FC = () => {
 
     const showSkeleton = keywordLoading || industryLoading || selectedLoading || cGetLoading || isRefetching
 
+    const selectedIndustryId = selectedData?.data?.selection?.industry?.id;
+    const competitorCount = competitorData?.results?.data?.competitors?.length ?? 0;
+
     return (
         <div className="min-h-screen text-white">
             <div className="max-w-[1200px] mx-auto">
                 <div className="flex mb-6 flex-col">
                     <div className='max-w-[680px]'>
                         <h2 className="text-xl md:text-2xl font-semibold flex items-center gap-2"> <span className='bg-[#00C950] w-3 h-3 rounded-full'></span> Industry Setup . Intent & Competitors</h2>
-                        <p className="text-sm text-[#FFFFFFB2] mt-2">Admin View: Choose an Industry, Select Up To Five Keywords For Intent Signals. Then Pick Up To Three Local Competitors With Websites For ProposalIQ.</p>
+                        {/* <p className="text-sm text-[#FFFFFFB2] mt-2">Admin View: Choose an Industry, Select Up To Five Keywords For Intent Signals. Then Pick Up To Three Local Competitors With Websites For ProposalIQ.</p> */}
                     </div>
                     <div className="flex items-center gap-3 mt-5 mb-3">
-                        <div className="rounded-full bg-[#1B1A25] border border-[#FFFFFF1A] px-4 py-2 text-xs">STEP 1 - CHOOSE INDUSTRY</div>
-                        <div className="rounded-full bg-[#1B1A25] border border-[#FFFFFF1A] px-4 py-2 text-xs">STEP 2 - PICK KEYWORDS (MAX 8)</div>
-                        <div className="rounded-full bg-[#1B1A25] border border-[#FFFFFF1A] px-4 py-2 text-xs">STEP 3 - ADD LOCAL COMPETITORS (MAX 3)</div>
+                        <div className={clsx("rounded-full px-4 py-2 text-xs border", step1Confirmed ? "bg-[#0D2A1A] border-[#00C950] text-[#9CF5C2]" : "bg-[#1B1A25] border-[#FFFFFF1A] text-white")}>STEP 1 - CHOOSE INDUSTRY</div>
+                        <div className={clsx("rounded-full px-4 py-2 text-xs border", step2Confirmed ? "bg-[#0D2A1A] border-[#00C950] text-[#9CF5C2]" : "bg-[#1B1A25] border-[#FFFFFF1A] text-white")}>STEP 2 - PICK KEYWORDS (MAX 8)</div>
+                        <div className={clsx("rounded-full px-4 py-2 text-xs border", step3Confirmed ? "bg-[#0D2A1A] border-[#00C950] text-[#9CF5C2]" : "bg-[#1B1A25] border-[#FFFFFF1A] text-white")}>STEP 3 - ADD LOCAL COMPETITORS (MAX 3)</div>
                     </div>
                 </div>
 
                 {/* top panels */}
-                <div className='bg-[#131219] border border-[#212129] p-4 rounded-2xl flex flex-col gap-5'>
-                    <div>
-                        <h2 className='text-lg font-semibold text-white'>Industry & Intent keywords</h2>
-                        <p className='text-sm text-[#FFFFFFB2] mt-1'>Pick the customer's industry, then select up to five keywords that describe how they operate. These drive VelociIQ intent signals.</p>
-                    </div>
-                    <div className="flex lg-xl:gap-9 md:gap-5 gap-4">
-                        {/* industry list */}
-                        <div className="flex-1">
-                            <Panel>
-                                <div className="space-y-3">
-                                    <div className="text-sm text-[#FFFFFFB2] pt-2">{!selectedData?.data?.selection?.industry?.id ? 'SEARCH INDUSTRIES' : 'SELECTED INDUSTRY'}</div>
-                                    {!selectedData?.data?.selection?.industry?.id &&
-                                        <input value={industrySearch} onChange={handleIndustrySearch} className="w-full bg-[#08080C] h-12 rounded-xl px-3 border border-[#FFFFFF1A] text-sm text-white" placeholder="e.g. HVAC, Wireless, Transportation..." />}
-                                    <div className="mt-3 space-y-4">
-                                        {showSkeleton ? (
-                                            Array.from({ length: 5 }).map((_, i) => <ShimmerWave key={`shim1-${i}`}/>)
-                                        ) :
-                                            filteredIndustry?.map((ind: Industry) => (
-                                                selectedData?.data?.selection?.industry?.id ?
-                                                    <div
-                                                        className={classNames(
-                                                            'w-full text-left p-3 rounded-xl flex flex-col gap-1 cursor-default',
-                                                            ind?.id === selectedData?.data?.selection?.industry?.id
-                                                                ? 'gradient-border text-white'
-                                                                : 'border border-[#FFFFFF1A] opacity-70'
-                                                        )}
-                                                    >{ind.name}</div>
-                                                    :
-                                                    <button
-                                                        key={ind.id}
-                                                        onClick={() => {
-                                                            setIndustrySearch(ind.name);
-                                                            setFilteredIndustry(industries);
-                                                        }}
-                                                        className={classNames(
-                                                            'w-full text-left p-3 rounded-xl flex flex-col gap-1 hover:opacity-70 duration-300',
-                                                            industrySearch === ind.name
-                                                                ? 'gradient-border text-white'
-                                                                : 'border border-[#FFFFFF1A]'
-                                                        )}
-                                                    >
-                                                        <div className="text-sm">{ind.name}</div>
-                                                        <div className="text-xs text-[#FFFFFFB2]">{ind.description}</div>
-                                                    </button>
-                                            ))
-                                        }
-                                    </div>
-                                </div>
-                            </Panel>
+                <div className='gradient-border rounded-2xl p-[1px]'>
+                    <div className='bg-[#131219] p-4 rounded-2xl flex flex-col gap-5'>
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className='text-lg font-semibold text-white'>Industry & Intent keywords</h2>
+                                <p className='text-sm text-[#FFFFFFB2] mt-1'>Pick the customer's industry, then select up to five keywords that describe how they operate. These drive VelociIQ intent signals.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setStep1Confirmed((prev) => !prev)}
+                                className={clsx(
+                                    "rounded-full px-5 h-10 text-sm border hover:opacity-80 duration-300",
+                                    step1Confirmed
+                                        ? "border-[#00C950] text-[#9CF5C2] bg-[#0D2A1A]"
+                                        : "border-[#FFFFFF33] text-[#FFFFFFB2] bg-[#1B1A25]"
+                                )}
+                            >
+                                Confirm
+                            </button>
                         </div>
+                        <div className="flex flex-col gap-5">
+                            {/* industry list */}
+                            <div className="w-full">
+                                <Panel>
+                                    <div className="space-y-3">
+                                        <div className="text-sm text-[#FFFFFFB2] pt-2">{!selectedData?.data?.selection?.industry?.id ? 'SEARCH INDUSTRIES' : 'SELECTED INDUSTRY'}</div>
+                                        {!selectedData?.data?.selection?.industry?.id &&
+                                            <input value={industrySearch} onChange={handleIndustrySearch} className="w-full bg-[#08080C] h-12 rounded-xl px-3 border border-[#FFFFFF1A] text-sm text-white" placeholder="e.g. HVAC, Wireless, Transportation..." />}
+                                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {showSkeleton ? (
+                                                Array.from({ length: 5 }).map((_, i) => <ShimmerWave key={`shim1-${i}`} />)
+                                            ) :
+                                                filteredIndustry?.map((ind: Industry) => (
+                                                    selectedData?.data?.selection?.industry?.id ?
+                                                        <div
+                                                            key={ind.id}
+                                                            className={classNames(
+                                                                'w-full text-left p-3 rounded-xl flex flex-col gap-1 cursor-default',
+                                                                ind?.id === selectedData?.data?.selection?.industry?.id
+                                                                    ? 'gradient-border text-white'
+                                                                    : 'border border-[#FFFFFF1A] opacity-70'
+                                                            )}
+                                                        >{ind.name}</div>
+                                                        :
+                                                        <button
+                                                            key={ind.id}
+                                                            onClick={() => {
+                                                                setIndustrySearch(ind.name);
+                                                                setFilteredIndustry(industries);
+                                                            }}
+                                                            className={classNames(
+                                                                'w-full text-left p-3 rounded-xl flex flex-col gap-1 hover:opacity-70 duration-300',
+                                                                industrySearch === ind.name
+                                                                    ? 'gradient-border text-white'
+                                                                    : 'border border-[#FFFFFF1A]'
+                                                            )}
+                                                        >
+                                                            <div className="text-sm">{ind.name}</div>
+                                                            <div className="text-xs text-[#FFFFFFB2]">{ind.description}</div>
+                                                        </button>
+                                                ))
+                                            }
+                                        </div>
+                                    </div>
+                                </Panel>
+                            </div>
 
-                        {/* keyword library */}
-                        <div className="max-w-[460px]">
-                            <Panel title="Industry keyword library" subTitleClass='max-w-[270px]' subtitle="Choose keywords to add to your selection. HVAC SERVICE KEYWORDS">
-                                {showSkeleton ? (
-                                    Array.from({ length: 5 }).map((_, i) => <ShimmerWave key={`shim2-${i}`}/>)
-                                ) :
-                                    <>
-                                        <div className="grid gap-4">
-                                            {keyworeds.map((kw: any) => {
-                                                return (
-                                                    <div key={kw.id} className="flex items-center text-[#FFFFFF] font-normal justify-between gap-4 p-3 rounded-xl border border-[#FFFFFF1A]">
-                                                        <div className="flex items-center gap-3 min-w-0">
-                                                            <div className="text-sm truncate">{kw.keyword}</div>
-                                                            {/* active={kw.intent === 'High'} */}
-                                                            <Tag small className={clsx('!py-0 h-6', kw.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{kw?.intent_level}</Tag>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <Button
-                                                                className={clsx(
-                                                                    '!py-0 h-6 min-w-[60px] text-[10px]',
-                                                                    chosenKeywords.some((c) => c.id === kw.id)
-                                                                        ? '!border-[#00A63E]'
-                                                                        : '!border-[#FFFFFFB2]'
+                            {/* keyword library */}
+                            <div className="w-full ">
+                                <Panel title="Industry keyword library" subTitleClass='max-w-[420px]' subtitle="Choose keywords to add to your selection. HVAC SERVICE KEYWORDS">
+                                    {showSkeleton ? (
+                                        Array.from({ length: 5 }).map((_, i) => <ShimmerWave key={`shim2-${i}`} />)
+                                    ) :
+                                        <>
+                                            <div className="grid gap-4">
+                                                {keyworeds.map((kw: any) => {
+                                                    const isChosen = chosenKeywords.some((c) => c.id === kw.id);
+                                                    const limitReached = chosenKeywords.length >= 8 && !isChosen;
+                                                    return (
+                                                        <button
+                                                            key={kw.id}
+                                                            type="button"
+                                                            disabled={limitReached}
+                                                            onClick={() => handleAddKeyword(kw)}
+                                                            className={clsx(
+                                                                "w-full flex items-center text-[#FFFFFF] font-normal justify-between gap-4 p-3 rounded-xl border duration-300",
+                                                                isChosen
+                                                                    ? "border-[#00A63E] bg-[#0A2516]"
+                                                                    : "border-[#FFFFFF1A] hover:border-[#FFFFFF66]",
+                                                                limitReached && "!opacity-50 cursor-not-allowed"
+                                                            )}
+                                                        >
+                                                            <div className="flex items-center gap-3 min-w-0">
+                                                                <div className="text-sm truncate">{kw.keyword}</div>
+                                                                <Tag small className={clsx('!py-0 h-6', kw.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{kw?.intent_level}</Tag>
+                                                            </div>
+                                                            <span className={clsx(
+                                                                'w-5 h-5 rounded-full border flex items-center justify-center shrink-0',
+                                                                isChosen ? 'border-[#00A63E] bg-[#00A63E]' : 'border-[#FFFFFF66]'
+                                                            )}>
+                                                                {isChosen && (
+                                                                    <svg width="9" height="7" viewBox="0 0 9 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                        <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
                                                                 )}
-                                                                variant={chosenKeywords.some((c) => c.id === kw.id) ? 'ghost' : 'outline'}
-                                                                onClick={() => {
-                                                                    if (chosenKeywords.some((c) => c.id === kw.id)) return;
-                                                                    if (chosenKeywords.length >= 8) {
-                                                                        return;
-                                                                    }
-                                                                    handleAddKeyword(kw);
-                                                                }}
-                                                            >
-                                                                {chosenKeywords.some((c) => c.id === kw.id) ? 'Added' : 'Add'}
-                                                            </Button>
+                                                            </span>
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                            <div className='text-sm text-[#FFFFFFB2] py-4 border-b border-[#FFFFFF1A]'>
+                                                Keywords here are tailored to that industry (AC system, carriers, student tablets, etc.). Use "Select" to include them in your chosen list.
+                                            </div>
+                                            <div className='flex items-center gap-3 justify-end mt-4'>
+                                                <div className='text-base text-[#FFFFFFB2]'>Missing something?</div>
+                                                <button className='gradient-border  rounded-xl h-10 px-5 hover:opacity-80 duration-300'>Request keyword</button>
+                                            </div>
+                                        </>
+                                    }
+                                </Panel>
+                            </div>
 
+                            {/* chosen keywords */}
+                            <div className="w-full">
+                                <Panel title="Chosen keywords" subtitle="Finalize your set. High | Mid | Low intent per term. SELECTED KEYWORDS - HVAC SERVICES (6/8)">
+                                    <div className="space-y-3">
+                                        <div className="space-y-4">
+                                            {chosenKeywords.length === 0 && (
+                                                <div className="text-sm text-[#FFFFFFB2]">No keywords selected yet.</div>
+                                            )}
+                                            {showSkeleton ? (
+                                                Array.from({ length: 8 }).map((_, i) => <ShimmerWave key={`shim3-${i}`} />)
+                                            ) :
+                                                chosenKeywords.map((k: any) => (
+                                                    <div key={k.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#FFFFFF1A]">
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm truncate">{k?.keyword}</div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <Tag small className={clsx('!py-0 h-6', k?.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{k?.intent_level}</Tag>
+                                                            <button type='button'
+                                                                onClick={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }}
+                                                                className="px-4 rounded-full font-medium hover:opacity-80 duration-300 border border-[#F14190] bg-transparent text-sm text-white !py-0 h-6 min-w-[60px] text-[10px]">Remove</button>
                                                         </div>
                                                     </div>
-                                                )
-                                            })}
+                                                ))
+                                            }
                                         </div>
-                                        <div className='text-sm text-[#FFFFFFB2] py-4 border-b border-[#FFFFFF1A]'>
-                                            Keywords here are tailored to that industry (AC system, carriers, student tablets, etc.). Click "Add" to send them to your chosen list.
-                                        </div>
-                                        <div className='flex items-center gap-3 justify-end mt-4'>
-                                            <div className='text-base text-[#FFFFFFB2]'>Missing something?</div>
-                                            <button className='gradient-border  rounded-xl h-10 px-5 hover:opacity-80 duration-300'>Request keyword</button>
-                                        </div>
-                                    </>
-                                }
-                            </Panel>
-                        </div>
-
-                        {/* chosen keywords */}
-                        <div className="flex-1">
-                            <Panel title="Chosen keywords" subtitle="Finalize your set. High | Mid | Low intent per term. SELECTED KEYWORDS - HVAC SERVICES (6/8)">
-                                <div className="space-y-3">
-                                    <div className="space-y-4">
-                                        {chosenKeywords.length === 0 && (
-                                            <div className="text-sm text-[#FFFFFFB2]">No keywords selected yet.</div>
-                                        )}
-                                        {showSkeleton ? (
-                                            Array.from({ length: 8 }).map((_, i) => <ShimmerWave key={`shim3-${i}`}/>)
-                                        ) :
-                                            chosenKeywords.map((k: any) => (
-                                                <div key={k.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#FFFFFF1A]">
-                                                    <div className="min-w-0">
-                                                        <div className="text-sm truncate">{k?.keyword}</div>
-                                                    </div>
-                                                    <div className="flex items-center gap-3">
-                                                        <Tag small className={clsx('!py-0 h-6', k?.intent_level?.toLowerCase()?.trim() === 'high' ? '!border-[#00A63E]' : '!border-[#FEAC48]')}>{k?.intent_level}</Tag>
-                                                        <button type='button'
-                                                            onClick={() => { handleToggleKeywordActive(k.id); handleRemoveKeyword(k.id) }}
-                                                            className="px-4 rounded-full font-medium hover:opacity-80 duration-300 border border-[#F14190] bg-transparent text-sm text-white !py-0 h-6 min-w-[60px] text-[10px]">Remove</button>
-
-                                                    </div>
-                                                </div>
-                                            ))
-                                        }
                                     </div>
-                                </div>
-                            </Panel>
+                                </Panel>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -464,21 +488,37 @@ const IndustrySetupPage: React.FC = () => {
 
                 {/* Competitors area */}
 
-                <div className='bg-[#131219] border border-[#212129] p-4 rounded-2xl flex flex-col gap-5 mt-6'>
-                    <div className="lg:col-span-8">
-                        <Panel title="ProposalIQ - Local Competitors" subtitle="Use the same industry above. Add your own competitors with websites. VelocityIQ will pull competitive details from these sites.">
+                <div className='gradient-border rounded-2xl p-[1px] mt-6'>
+                    <div className='bg-[#131219] p-4 rounded-2xl'>
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="text-lg font-semibold text-white">Market Intelligence</div>
+                            <button
+                                type="button"
+                                onClick={() => setStep2Confirmed((prev) => !prev)}
+                                className={clsx(
+                                    "rounded-full px-5 h-10 text-sm border hover:opacity-80 duration-300",
+                                    step2Confirmed
+                                        ? "border-[#00C950] text-[#9CF5C2] bg-[#0D2A1A]"
+                                        : "border-[#FFFFFF33] text-[#FFFFFFB2] bg-[#1B1A25]"
+                                )}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                        <Panel subtitle=" VelocityIQOS measures your products and services against the market to sharpen your offer, accelerate decision-making, and eliminate friction in the sales cycle.
+ ">
                             <div className="grid gap-3">
                                 <div className="flex gap-4 mb-2">
                                     <div className='flex-1 flex flex-col'>
                                         {/* value={zip} onChange={(e) => setZip(e.target.value)} */}
                                         <label className='text-sm font-medium text-[#FFFFFF] mb-1'>YOUR COMPANY ZIP</label>
                                         <input className="bg-[#09090E] h-11 rounded-xl px-3 border border-[#FFFFFF1A] text-xs text-white w-full" />
-                                        <p className='text-sm text-[#FFFFFFB2] mt-3'>This helps VelociIQ suggest local competitors around your market.</p>
+                                        {/* <p className='text-sm text-[#FFFFFFB2] mt-3'>This helps VelocityIQ measure local competitors around your market.</p> */}
                                     </div>
                                     <div className='flex-1 flex flex-col'>
-                                        <label className='text-sm font-medium text-[#FFFFFF] mb-1'>CUSTOMER INDUSTRY</label>
+                                        <label className='text-sm font-medium text-[#FFFFFF] mb-1'>YOUR INDUSTRY</label>
                                         <input className="bg-[#09090E] h-11 text-xs rounded-xl px-3 border border-[#FFFFFF1A] text-white w-full" />
-                                        <p className='text-sm text-[#FFFFFFB2] mt-3'>This matches the industry you selected above.</p>
+                                        {/* <p className='text-sm text-[#FFFFFFB2] mt-3'>This matches the industry you selected above.</p> */}
                                     </div>
                                 </div>
                                 <div>
@@ -517,9 +557,26 @@ const IndustrySetupPage: React.FC = () => {
                             </div>
                         </Panel>
                     </div>
+                </div>
 
-                    <div className="lg:col-span-4 mt-2">
-                        <Panel title={`Selected Competitors (${selectedCompetitors.length}/3)`} subtitle="VelocityIQ will pull details from these websites when generating ProposalIQ analysis.">
+                <div className='gradient-border rounded-2xl p-[1px] mt-6'>
+                    <div className='bg-[#131219] p-4 rounded-2xl'>
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="text-lg font-semibold text-white">{`Selected Competitors (${competitorCount}/3)`}</div>
+                            <button
+                                type="button"
+                                onClick={() => setStep3Confirmed((prev) => !prev)}
+                                className={clsx(
+                                    "rounded-full px-5 h-10 text-sm border hover:opacity-80 duration-300",
+                                    step3Confirmed
+                                        ? "border-[#00C950] text-[#9CF5C2] bg-[#0D2A1A]"
+                                        : "border-[#FFFFFF33] text-[#FFFFFFB2] bg-[#1B1A25]"
+                                )}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                        <Panel subtitle="VelocityIQ will pull details from these websites when generating ProposalIQ analysis.">
                             {showSkeleton ? (
                                 Array.from({ length: 3 }).map((_, i) => <ShimmerWave key={`shim4-${i}`}/>)
                             ) :
@@ -572,4 +629,3 @@ const IndustrySetupPage: React.FC = () => {
 };
 
 export default IndustrySetupPage;
-
