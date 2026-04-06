@@ -399,7 +399,7 @@ const IndustrySetupPage: React.FC = () => {
 
                             {/* keyword library */}
                             <div className="w-full ">
-                                <Panel title="Industry keyword library" subTitleClass='max-w-[420px]' subtitle="Choose keywords to add to your selection. HVAC SERVICE KEYWORDS">
+                                <Panel title="Industry keyword library" subTitleClass='max-w-[420px]' subtitle="Industry-aligned keywords designed to capture high-impact market signals, powering smarter prospecting and faster execution.">
                                     {showSkeleton ? (
                                         Array.from({ length: 5 }).map((_, i) => <ShimmerWave key={`shim2-${i}`} />)
                                     ) :
