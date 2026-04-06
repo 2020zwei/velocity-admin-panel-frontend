@@ -1,5 +1,6 @@
 import { useApi } from "@/hooks/useApi";
 import Spinner from "@/components/Spinner";
+import { useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   name?: string;
@@ -25,6 +26,11 @@ const getInitials = (name?: string) => {
 };
 
 const Profile = () => {
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [saveError, setSaveError] = useState("");
+
   const {
     data: user,
     isLoading,
@@ -36,6 +42,42 @@ const Profile = () => {
     method: "get",
     transformResponse: (d) => d?.data?.profile ?? d?.data ?? d,
   });
+
+  const { isLoading: isUpdating, refetch: updateProfile } = useApi<any>({
+    url: "/update/",
+    auto: false,
+    method: "put",
+    transformResponse: (d) => d,
+  });
+
+  useEffect(() => {
+    setPhoneNumber(user?.phone_number ?? "");
+  }, [user?.phone_number]);
+
+  const hasPendingChanges = useMemo(() => {
+    const initialPhone = user?.phone_number ?? "";
+    const phoneChanged = phoneNumber !== initialPhone;
+    const pictureChanged = Boolean(profileFile);
+    return phoneChanged || pictureChanged;
+  }, [phoneNumber, profileFile, user?.phone_number]);
+
+  const handleSave = async () => {
+    setSaveMessage("");
+    setSaveError("");
+    try {
+      const formData = new FormData();
+      formData.append("phone_number", phoneNumber);
+      if (profileFile) {
+        formData.append("profile_picture", profileFile);
+      }
+      await updateProfile({ body: formData as any });
+      await refetch();
+      setProfileFile(null);
+      setSaveMessage("Profile updated successfully.");
+    } catch (err: any) {
+      setSaveError(err?.response?.data?.message || "Unable to update profile right now.");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -93,6 +135,27 @@ const Profile = () => {
 
             <h2 className="mt-4 text-xl font-semibold">{user?.name || "User"}</h2>
             <p className="mt-1 text-sm text-[#9BA4B5] break-all">{user?.email || "-"}</p>
+            <div className="mt-4 w-full">
+              <label
+                htmlFor="profile-picture-input"
+                className="h-10 px-4 rounded-lg border border-[#243042] bg-[#0A0F18] text-sm font-medium flex items-center justify-center cursor-pointer hover:opacity-80 duration-300"
+              >
+                {profileFile ? "Change selected picture" : "Change profile picture"}
+              </label>
+              <input
+                id="profile-picture-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setProfileFile(file);
+                }}
+              />
+              {profileFile && (
+                <p className="mt-2 text-xs text-[#9BA4B5] truncate">{profileFile.name}</p>
+              )}
+            </div>
 
             <div className="mt-5 w-full rounded-xl border border-[#243042] bg-[#0A0F18] px-4 py-3">
               <p className="text-xs text-[#8F99AA]">Organization</p>
@@ -128,7 +191,13 @@ const Profile = () => {
 
               <div className="rounded-xl border border-[#243042] bg-[#0A0F18] p-4">
                 <p className="text-xs text-[#8F99AA]">Phone</p>
-                <p className="mt-1 text-sm font-medium">{user?.phone_number || "-"}</p>
+                <input
+                  type="text"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="mt-2 bg-[#12171F] h-11 rounded-lg px-3 border border-[#2A3443] w-full text-white placeholder:text-[#6D7685] text-sm"
+                  placeholder="Enter phone number"
+                />
               </div>
 
               <div className="rounded-xl border border-[#243042] bg-[#0A0F18] p-4">
@@ -136,13 +205,10 @@ const Profile = () => {
                 <p className="mt-1 text-sm font-medium">{user?.role || "-"}</p>
               </div>
 
-              <div className="rounded-xl border border-[#243042] bg-[#0A0F18] p-4">
-                <p className="text-xs text-[#8F99AA]">Department</p>
-                <p className="mt-1 text-sm font-medium">{user?.department || "-"}</p>
-              </div>
+              
 
               <div className="rounded-xl border border-[#243042] bg-[#0A0F18] p-4">
-                <p className="text-xs text-[#8F99AA]">Location</p>
+                <p className="text-xs text-[#8F99AA]">Territory</p>
                 <p className="mt-1 text-sm font-medium">{user?.location || "-"}</p>
               </div>
 
@@ -151,10 +217,19 @@ const Profile = () => {
                 <p className="mt-1 text-sm font-medium">{user?.date_joined || "-"}</p>
               </div>
 
-              <div className="rounded-xl border border-[#243042] bg-[#0A0F18] p-4">
-                <p className="text-xs text-[#8F99AA]">Account Type</p>
-                <p className="mt-1 text-sm font-medium">{user?.is_company ? "Company" : "Individual"}</p>
-              </div>
+              
+            </div>
+            <div className="mt-5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isUpdating || !hasPendingChanges}
+                className="h-10 px-5 rounded-lg bg-blue-gradient font-semibold text-sm hover:opacity-90 duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? "Saving..." : "Save Changes"}
+              </button>
+              {saveMessage && <p className="text-sm text-green-400">{saveMessage}</p>}
+              {saveError && <p className="text-sm text-red-400">{saveError}</p>}
             </div>
           </div>
         </div>

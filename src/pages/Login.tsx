@@ -73,7 +73,7 @@ const Login = () => {
                         alt="Admin panel logo"
                         className="h-12 w-auto mb-16 mx-auto"
                     />
-                    <h1 className="text-2xl text-start font-semibold">Welcome to admin panel</h1>
+                    <h1 className="text-2xl text-start font-semibold">Welcome to Admin Portal</h1>
                 </div>
                 <div className="flex flex-col gap-2 w-full text-start mt-5">
                     <label className="font-medium text-base">
