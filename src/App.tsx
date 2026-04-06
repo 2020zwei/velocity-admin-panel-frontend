@@ -9,10 +9,10 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import IndustrySetupPage from "./pages/IndustrySetupPage";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import ScrollToTop from "./components/ScrollToTop";
 import SetPassword from "./pages/SetPassword";
+import SignUp from "./pages/SignUp";
+import Profile from "./pages/Profile";
 
 
 const App: React.FC = () => {
@@ -23,6 +23,7 @@ const App: React.FC = () => {
         <Routes>
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
               <Route path="/set-password" element={<SetPassword />} />
           </Route>
           {/* protected routes */}
@@ -33,12 +34,12 @@ const App: React.FC = () => {
               <Route path="/seller/upload" element={<UploadDocument />} />
               <Route path="/industory-setup" element={<IndustrySetupPage />} />
               <Route path="/approvers" element={<Approvers />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
           </Route>
           <Route path="*" element={<div><p>404 Not Found</p></div>} />
         </Routes>
       </BrowserRouter>
-      <ToastContainer />
     </>
   );
 };

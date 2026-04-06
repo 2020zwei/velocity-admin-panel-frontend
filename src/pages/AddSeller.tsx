@@ -12,6 +12,7 @@ import Spinner from "@/components/Spinner";
 import { GetState } from "react-country-state-city";
 import { useDebounce } from "@/helper/debounce";
 import { optionGenerator } from "@/helper/optionGenerator";
+import zipcodes from "zipcodes";
 
 const sellerSchema = z.object({
     name: z.string().min(1, "Sales Agent Name is required"),
@@ -39,11 +40,34 @@ const extractApprovers = (res: any) => res?.results?.data?.approvers ?? [];
 const extractCount = (res: any) =>
     res?.count ?? res?.results?.count ?? res?.results?.data?.count ?? 0;
 
+const getReadableApiMessage = (err: any): string => {
+    const raw =
+        err?.response?.data?.message ??
+        err?.response?.data?.errors?.validationError ??
+        err?.response?.data?.error_message ??
+        err?.message;
+
+    if (!raw) return "Unable to submit right now. Please try again.";
+
+    const text = String(raw);
+    const detailMatch = text.match(/ErrorDetail\(string='([^']+)'/);
+    if (detailMatch?.[1]) return detailMatch[1];
+
+    return text
+        .replace(/ErrorDetail\(string='/g, "")
+        .replace(/', code='[^']+'\)/g, "")
+        .replace(/[{}[\]]/g, "")
+        .replace(/'email':/gi, "Email:")
+        .trim();
+};
+
 const AddSeller = () => {
     // const [filterdKeywords, setFilterdKeywords] = useState<string[]>([]);
     // const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const { state, search } = useLocation();
     const [states, setStates] = useState<Option[]>([]);
+    const [showZipPicker, setShowZipPicker] = useState(false);
+    const [submitError, setSubmitError] = useState("");
     // ✅ Approvers
     const [approverOptions, setApproverOptions] = useState<Option[]>([]);
     const [approverCount, setApproverCount] = useState<number>(0);
@@ -250,6 +274,8 @@ const AddSeller = () => {
         control,
         reset,
         watch,
+        setValue,
+        clearErrors,
         formState: { errors },
     } = useForm<SellerFormValues>({
         resolver: zodResolver(sellerSchema),
@@ -266,10 +292,12 @@ const AddSeller = () => {
 
     const onSubmit = async (values: any) => {
         try {
+            setSubmitError("");
             await callApi({ body: values });
             navigate("/");
             reset();
         } catch (err) {
+            setSubmitError(getReadableApiMessage(err));
             console.error("submit error", err);
         }
     };
@@ -301,6 +329,42 @@ const AddSeller = () => {
     useEffect(() => {
         void GetStatesList();
     }, []);
+
+    const selectedStateCode = watch("territory_state");
+    const selectedZipCode = watch("zip_code");
+    const stateZipRecords = useMemo(() => {
+        if (!selectedStateCode) return [];
+        const items = zipcodes.lookupByState(String(selectedStateCode).toUpperCase()) ?? [];
+        const map = new Map<string, { zip: string; city?: string; state?: string }>();
+        items.forEach((item: any) => {
+            const zip = String(item?.zip ?? "").trim();
+            if (!zip) return;
+            if (!map.has(zip)) {
+                map.set(zip, {
+                    zip,
+                    city: item?.city,
+                    state: item?.state,
+                });
+            }
+        });
+        return Array.from(map.values());
+    }, [selectedStateCode, selectedZipCode]);
+
+    const filteredStateZipRecords = useMemo(() => {
+        const q = showZipPicker && String(selectedZipCode ?? "").trim().length < 5
+            ? String(selectedZipCode ?? "").trim().toLowerCase()
+            : "";
+        if (!q) return stateZipRecords;
+        return stateZipRecords.filter(
+            (item) =>
+                item.zip.includes(q) ||
+                String(item.city ?? "").toLowerCase().includes(q)
+        );
+    }, [stateZipRecords, selectedZipCode]);
+
+    const selectedZipMeta = useMemo(() => {
+        return stateZipRecords.find((item) => item.zip === selectedZipCode);
+    }, [stateZipRecords, selectedZipCode]);
 
     if (approverLoading && !approverRefetching) {
         return <div className=" fixed bg-black-700/50 z-[999] h-screen w-screen top-0 start-0 end-0 bottom-0 flex items-center justify-center"><Spinner /></div>
@@ -412,7 +476,12 @@ const AddSeller = () => {
                                                     isSearch={true}
                                                     value={states.find((s) => s.value === field.value)}
                                                     onSelect={(item) => {
-                                                        if (!Array.isArray(item)) field.onChange(item.value);
+                                                        if (!Array.isArray(item)) {
+                                                            field.onChange(item.value);
+                                                            setShowZipPicker(true);
+                                                            setValue("zip_code", "", { shouldValidate: true, shouldDirty: true });
+                                                            clearErrors("zip_code");
+                                                        }
                                                     }}
                                                     placeholder="Select territory"
                                                     classNames={{
@@ -433,13 +502,68 @@ const AddSeller = () => {
                                     <label className="font-medium text-base">
                                         Zip Code <span className="text-[#EE2B93] ps-1">*</span>
                                     </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Enter comma-separated ZIP codes...."
-                                        className="bg-[#09090E] h-14 rounded-xl px-3 border border-[#FFFFFF1A]"
-                                        {...register("zip_code")}
+                                    <Controller
+                                        name="zip_code"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <div className="bg-[#09090E] rounded-xl px-3 py-3 border border-[#FFFFFF1A]">
+                                                {!selectedStateCode ? (
+                                                    <div className="text-sm text-[#FFFFFF99]">Select territory state first</div>
+                                                ) : stateZipRecords.length ? (
+                                                    <div className="space-y-3">
+                                                        <input
+                                                            type="text"
+                                                            value={field.value ?? ""}
+                                                            onFocus={() => setShowZipPicker(true)}
+                                                            onChange={(e) => {
+                                                                const cleaned = e.target.value.replace(/[^\d-]/g, "").slice(0, 10);
+                                                                field.onChange(cleaned);
+                                                                clearErrors("zip_code");
+                                                                setShowZipPicker(cleaned.length < 5);
+                                                            }}
+                                                            placeholder={`Search ZIP in ${String(selectedStateCode).toUpperCase()}...`}
+                                                            className="bg-[#0F1118] h-10 rounded-lg px-3 border border-[#FFFFFF1A] text-sm w-full"
+                                                        />
+                                                        {selectedZipMeta && (
+                                                            <div className="text-xs text-[#FFFFFFA3]">
+                                                                {selectedZipMeta.zip} - {selectedZipMeta.city}, {selectedZipMeta.state}
+                                                            </div>
+                                                        )}
+                                                        {showZipPicker && (
+                                                            <div className="max-h-56 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 pr-1">
+                                                                {filteredStateZipRecords.map((item) => {
+                                                                    const isSelected = field.value === item.zip;
+                                                                    return (
+                                                                        <button
+                                                                            key={item.zip}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                field.onChange(item.zip);
+                                                                                clearErrors("zip_code");
+                                                                                setShowZipPicker(false);
+                                                                            }}
+                                                                            className={clsx(
+                                                                                "h-11 rounded-lg px-3 text-sm border duration-300 flex items-center justify-between gap-2",
+                                                                                isSelected
+                                                                                    ? "border-[#00C950] bg-[#0D2A1A] text-[#9CF5C2]"
+                                                                                    : "border-[#FFFFFF2E] text-white hover:border-[#FFFFFF80]"
+                                                                            )}
+                                                                        >
+                                                                            <span>{item.zip}</span>
+                                                                            <span className="text-[11px] text-[#FFFFFFB2] truncate">{item.city}, {item.state}</span>
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm text-[#FFFFFF99]">No ZIP codes found for this state</div>
+                                                )}
+                                            </div>
+                                        )}
                                     />
-                                    {errors.zip_code && <p className="text-xs text-red-500 mt-1">{errors.zip_code.message}</p>}
+                                    {errors.zip_code && !selectedZipCode && <p className="text-xs text-red-500 mt-1">{errors.zip_code.message}</p>}
                                 </div>
                             </div>
 
@@ -518,6 +642,11 @@ const AddSeller = () => {
                                     )}
                                 />
                             </div>
+                              {submitError && (
+                            <div className="mt-4 rounded-xl border border-[#FB2C36]/40 bg-[#2A0F14] px-4 py-3 text-sm text-[#FFB4BE]">
+                                {submitError}
+                            </div>
+                        )}
                         </div>
 
                         <div className="lg-xl:flex items-center mt-10 gap-10">
@@ -529,6 +658,7 @@ const AddSeller = () => {
                                 by submitting, you’re authorizing VelocityIQ to onboard these details into your workspace.
                             </p>
                         </div>
+                      
                     </form>
                 </div>
 
