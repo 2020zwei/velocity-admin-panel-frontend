@@ -14,7 +14,7 @@ const signUpSchema = z
     organization_name: z.string().min(1, "Organization name is required"),
     name: z.string().min(1, "Full name is required"),
     email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
-    profilePicture: z
+    profile_picture: z
       .instanceof(File, { message: "Profile picture is required" })
       .refine((file) => file.size <= 5 * 1024 * 1024, "Image must be 5MB or less"),
     password: z
@@ -25,9 +25,6 @@ const signUpSchema = z
         "Password must include uppercase, lowercase, number and special character"
       ),
     confirmPassword: z.string().min(1, "Confirm password is required"),
-    termsAccepted: z.literal(true, {
-      errorMap: () => ({ message: "You must accept terms and conditions" }),
-    }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -57,11 +54,10 @@ const SignUp = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      termsAccepted: false,
     } as any,
   });
 
-  const selectedFile = watch("profilePicture");
+  const selectedFile = watch("profile_picture");
 
   const onSubmit = async (values: SignUpFormValues) => {
     setServerError("");
@@ -71,11 +67,10 @@ const SignUp = () => {
       formData.append("organization_name", values.organization_name);
       formData.append("name", values.name);
       formData.append("email", values.email);
-      formData.append("profilePicture", values.profilePicture);
+      formData.append("profile_picture", values.profile_picture);
       formData.append("max_sales_rep", "1");
       formData.append("password", values.password);
       formData.append("confirmPassword", values.confirmPassword);
-      formData.append("termsAccepted", String(values.termsAccepted));
 
       await axiosInstance.post("signup/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -144,8 +139,8 @@ const SignUp = () => {
             label="Profile Picture"
             value={selectedFile}
             required
-            onChange={(file) => setValue("profilePicture", file as any, { shouldValidate: true })}
-            error={errors.profilePicture?.message as string | undefined}
+            onChange={(file) => setValue("profile_picture", file as any, { shouldValidate: true })}
+            error={errors.profile_picture?.message as string | undefined}
           />
 
           <div className="space-y-2">
@@ -193,18 +188,6 @@ const SignUp = () => {
             </div>
             {errors.confirmPassword && (
               <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>
-            )}
-          </div>
-
-          <div className="pt-1">
-            <label className="inline-flex items-center gap-3 text-sm cursor-pointer">
-              <input type="checkbox" className="h-4 w-4" {...register("termsAccepted")} />
-              <span className="text-white">
-                I agree to the Terms and Conditions and Privacy Policy
-              </span>
-            </label>
-            {errors.termsAccepted && (
-              <p className="text-xs text-red-500 mt-1">{errors.termsAccepted.message}</p>
             )}
           </div>
 
